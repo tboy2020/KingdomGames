@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>X & O — Dominion vs Anu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+      color: #fff;
+    }
+    .title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 48px;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 13px; color: #aaa; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 1px; }
+    .screen { width: 100%; max-width: 380px; display: none; flex-direction: column; align-items: center; gap: 16px; }
+    .screen.active { display: flex; }
+
+    /* INPUTS */
+    .player-inputs { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .player-row { display: flex; align-items: center; gap: 10px; }
+    .player-icon { font-size: 28px; width: 36px; text-align: center; }
+    .player-row input {
+      flex: 1; background: #16213e; border: 2px solid #0f3460; border-radius: 12px;
+      padding: 12px 16px; color: #fff; font-family: 'Nunito', sans-serif;
+      font-size: 16px; font-weight: 700; outline: none;
+    }
+    .player-row input:focus { border-color: #f7971e; }
+    .player-row input::placeholder { color: #555; font-weight: 400; }
+
+    /* BUTTONS */
+    .btn {
+      font-family: 'Fredoka One', cursive; font-size: 20px; letter-spacing: 1px;
+      padding: 14px 36px; border: none; border-radius: 50px; cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
+    .btn-secondary { background: #16213e; border: 2px solid #0f3460; color: #fff; font-size: 15px; padding: 11px 26px; }
+    .btn-coach { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
+    .btn-sm { font-size: 15px; padding: 10px 22px; }
+
+    /* HOME SCREEN */
+    .home-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
+    .home-divider { font-size: 12px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* COIN FLIP */
+    .coin-stage { background: #16213e; border-radius: 20px; padding: 28px 20px; width: 100%; text-align: center; }
+    .coin-prompt { font-size: 15px; color: #ccc; margin-bottom: 6px; }
+    .coin-names { font-size: 19px; font-weight: 800; color: #ffd200; margin-bottom: 8px; }
+    .coin-caller { font-size: 14px; color: #aaa; margin-bottom: 18px; }
+    .coin-wrap { perspective: 600px; margin: 0 auto 20px; width: 120px; height: 120px; }
+    .coin { width: 120px; height: 120px; position: relative; transform-style: preserve-3d; border-radius: 50%; }
+    .coin.flipping { animation: coinSpin 1.4s cubic-bezier(.36,.07,.19,.97) forwards; }
+    @keyframes coinSpin { 0%{transform:rotateY(0)} 100%{transform:rotateY(var(--flip-end))} }
+    .coin-face {
+      position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-family: 'Fredoka One', cursive; font-size: 22px;
+      backface-visibility: hidden; border: 4px solid rgba(255,255,255,0.15);
+    }
+    .coin-heads { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
+    .coin-tails { background: linear-gradient(135deg, #0f3460, #1a73e8); color: #fff; transform: rotateY(180deg); }
+    .call-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 8px; }
+    .call-btn { font-family: 'Fredoka One', cursive; font-size: 17px; padding: 12px 30px; border: none; border-radius: 50px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .call-btn:active { transform: scale(0.95); }
+    .call-heads { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
+    .call-tails { background: linear-gradient(135deg, #0f3460, #1a73e8); color: #fff; }
+    .flip-result { font-size: 16px; font-weight: 800; color: #fff; min-height: 24px; margin-top: 12px; }
+    .flip-result.win { color: #4ade80; }
+    .flip-result.lose { color: #f87171; }
+
+    /* GAME BOARD */
+    .scoreboard { display: flex; gap: 12px; width: 100%; justify-content: center; }
+    .score-card { flex: 1; max-width: 160px; background: #16213e; border-radius: 14px; padding: 10px 10px 8px; text-align: center; border: 2px solid #0f3460; transition: border-color 0.3s, background 0.3s; }
+    .score-card.active-player { border-color: #f7971e; background: #1e2a4a; }
+    .score-name { font-size: 13px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .score-mark { font-family: 'Fredoka One', cursive; font-size: 24px; }
+    .mark-x { color: #f87171; }
+    .mark-o { color: #60a5fa; }
+    .score-num { font-family: 'Fredoka One', cursive; font-size: 30px; color: #ffd200; }
+    .turn-banner { font-size: 16px; font-weight: 800; color: #ffd200; letter-spacing: 0.5px; min-height: 24px; }
+    .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 340px; }
+    .cell {
+      aspect-ratio: 1; background: #16213e; border-radius: 16px; border: 2px solid #0f3460;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fredoka One', cursive; font-size: 58px; cursor: pointer;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .cell:hover:not(.taken) { background: #1e2a4a; border-color: #f7971e; }
+    .cell:active:not(.taken) { transform: scale(0.94); }
+    .cell.taken { cursor: default; }
+    .cell.x-cell { color: #f87171; }
+    .cell.o-cell { color: #60a5fa; }
+    .cell.winner-cell { background: #1e3a1e; border-color: #4ade80; animation: winPulse 0.5s ease; }
+    .cell.hint-cell { border-color: #ffd200; background: #2a2a1e; animation: hintPulse 0.8s ease infinite alternate; }
+    @keyframes hintPulse { 0%{border-color:#ffd200} 100%{border-color:#f7971e} }
+    @keyframes winPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    .cell.pop { animation: pop 0.2s ease; }
+    @keyframes pop { 0%{transform:scale(0.8)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    .game-msg { font-size: 18px; font-weight: 800; color: #fff; min-height: 28px; text-align: center; }
+    .game-msg.win-msg { color: #4ade80; font-size: 22px; }
+    .game-msg.draw-msg { color: #ffd200; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .vs-col { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:12px; color:#555; font-weight:700; }
+    .vs-col .draw-num { color:#666; font-family:'Fredoka One',cursive; font-size:20px; }
+
+    /* ── COACH MODE ── */
+    .coach-pick { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .coach-card {
+      background: #16213e; border: 2px solid #0f3460; border-radius: 18px;
+      padding: 18px 20px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .coach-card:hover { border-color: #a855f7; background: #1a1a3e; }
+    .coach-card .coach-avatar { font-size: 44px; flex-shrink: 0; }
+    .coach-card .coach-info { text-align: left; }
+    .coach-card .coach-name { font-family: 'Fredoka One', cursive; font-size: 22px; color: #ffd200; }
+    .coach-card .coach-level { font-size: 13px; color: #a855f7; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .coach-card .coach-desc { font-size: 13px; color: #aaa; }
+
+    /* LESSON SCREEN */
+    .lesson-box { background: #16213e; border-radius: 20px; padding: 24px 20px; width: 100%; }
+    .lesson-progress { display: flex; gap: 6px; margin-bottom: 18px; justify-content: center; }
+    .lesson-dot { width: 10px; height: 10px; border-radius: 50%; background: #0f3460; transition: background 0.3s; }
+    .lesson-dot.done { background: #4ade80; }
+    .lesson-dot.active { background: #ffd200; }
+
+    .coach-bubble {
+      background: #0f3460; border-radius: 16px 16px 16px 4px;
+      padding: 14px 16px; margin-bottom: 16px; position: relative;
+    }
+    .coach-bubble .bubble-avatar { font-size: 28px; margin-bottom: 6px; }
+    .coach-bubble .bubble-text { font-size: 15px; color: #e0e0ff; line-height: 1.5; }
+    .coach-bubble .bubble-name { font-size: 11px; color: #7c9fd4; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+
+    .lesson-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 280px; margin: 0 auto 16px; }
+    .lesson-cell {
+      aspect-ratio: 1; background: #0a1628; border-radius: 12px; border: 2px solid #0f3460;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Fredoka One', cursive; font-size: 36px;
+    }
+    .lesson-cell.lx { color: #f87171; }
+    .lesson-cell.lo { color: #60a5fa; }
+    .lesson-cell.highlight { border-color: #4ade80; background: #0d2b0d; }
+    .lesson-cell.hint { border-color: #ffd200; background: #2a2a0a; }
+    .lesson-cell.blocked { border-color: #f87171; background: #2a0a0a; }
+    .lesson-cell.center { border-color: #a855f7; background: #1a0a2e; }
+
+    .lesson-tip {
+      background: #0f3460; border-left: 4px solid #ffd200;
+      border-radius: 0 10px 10px 0; padding: 10px 14px;
+      font-size: 13px; color: #e0e0ff; margin-bottom: 12px; line-height: 1.5;
+    }
+
+    .win-patterns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .pattern-row { display: flex; gap: 8px; align-items: center; }
+    .pattern-label { font-size: 12px; color: #aaa; width: 60px; flex-shrink: 0; font-weight: 700; }
+    .mini-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; }
+    .mini-cell { aspect-ratio: 1; background: #0a1628; border-radius: 6px; border: 1px solid #0f3460; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One', cursive; font-size: 18px; }
+    .mini-cell.win-x { color: #f87171; border-color: #4ade80; background: #0d2b0d; }
+    .mini-cell.win-o { color: #60a5fa; border-color: #4ade80; background: #0d2b0d; }
+
+    /* PRACTICE vs ROBOT */
+    .robot-banner {
+      background: linear-gradient(135deg, #1a0a2e, #2a1040);
+      border: 2px solid #a855f7; border-radius: 16px;
+      padding: 12px 16px; text-align: center; width: 100%;
+    }
+    .robot-name { font-family: 'Fredoka One', cursive; font-size: 22px; color: #a855f7; }
+    .robot-sub { font-size: 12px; color: #888; }
+    .coach-hint-box {
+      background: #0f2a0f; border: 2px solid #4ade80; border-radius: 12px;
+      padding: 10px 14px; font-size: 13px; color: #4ade80;
+      text-align: center; min-height: 20px; width: 100%;
+    }
+
+    /* BADGE SCREEN */
+    .badge-screen { text-align: center; }
+    .badge-icon { font-size: 80px; margin-bottom: 8px; animation: badgePop 0.6s ease; }
+    @keyframes badgePop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    .badge-title { font-family: 'Fredoka One', cursive; font-size: 30px; color: #ffd200; margin-bottom: 8px; }
+    .badge-msg { font-size: 15px; color: #ccc; line-height: 1.6; margin-bottom: 20px; }
+    .stars { font-size: 36px; letter-spacing: 6px; margin-bottom: 16px; }
+
+    /* MUSIC TOGGLE */
+    .music-btn {
+      position: fixed; top: 14px; right: 16px; z-index: 999;
+      background: #16213e; border: 2px solid #0f3460; border-radius: 50%;
+      width: 44px; height: 44px; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+    .music-btn:active { transform: scale(0.92); }
+    .music-btn.playing { border-color: #ffd200; animation: musicPulse 1.5s ease-in-out infinite; }
+    @keyframes musicPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,210,0,0.4)} 50%{box-shadow:0 0 0 8px rgba(255,210,0,0)} }
+  </style>
+</head>
+<body>
+
+  <button class="music-btn playing" id="music-btn" onclick="toggleMusic()" title="Toggle music">🎵</button>
+
+  <div class="title">X &amp; O</div>
+  <div class="subtitle" id="xo-subtitle">X &amp; O</div>
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="screen-home">
+    <div style="font-size:15px;color:#ccc;text-align:center;">Choose how to play today!</div>
+    <div class="home-buttons">
+      <button class="btn btn-primary" onclick="goToNames()" style="width:100%;max-width:300px">▶ Play Together</button>
+      <div class="home-divider">— or —</div>
+      <button class="btn btn-coach" onclick="goToCoachPick()" style="width:100%;max-width:300px;font-size:18px;">🎓 Learn to Play</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Names (2-player) -->
+  <div class="screen" id="screen-names">
+    <div style="font-size:15px;color:#ccc;text-align:center;">Who's playing today? ✏️</div>
+    <div class="player-inputs">
+      <div class="player-row">
+        <span class="player-icon">🔴</span>
+        <input id="name1" type="text" placeholder="Player 1 name" id="name1" value="" maxlength="12" />
+      </div>
+      <div class="player-row">
+        <span class="player-icon">🔵</span>
+        <input id="name2" type="text" placeholder="Player 2 name" id="name2" value="" maxlength="12" />
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goToCoinFlip()">Let's Play! 🎲</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-home')">← Back</button>
+  </div>
+
+  <!-- SCREEN: Coin Flip -->
+  <div class="screen" id="screen-coin">
+    <div class="coin-stage">
+      <div class="coin-prompt">Time for a fair flip! 🪙</div>
+      <div class="coin-names" id="coin-names">Dominion vs Anu</div>
+      <div class="coin-caller" id="coin-caller">Dominion, call it before the flip!</div>
+      <div class="coin-wrap">
+        <div class="coin" id="coin">
+          <div class="coin-face coin-heads">HEADS</div>
+          <div class="coin-face coin-tails">TAILS</div>
+        </div>
+      </div>
+      <div class="call-buttons" id="call-buttons">
+        <button class="call-btn call-heads" onclick="makeCoinCall('heads')">HEADS</button>
+        <button class="call-btn call-tails" onclick="makeCoinCall('tails')">TAILS</button>
+      </div>
+      <div class="flip-result" id="flip-result"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-names')">← Change Names</button>
+  </div>
+
+  <!-- SCREEN: 2-Player Game -->
+  <div class="screen" id="screen-game">
+    <div class="scoreboard">
+      <div class="score-card active-player" id="card-x">
+        <div class="score-name" id="name-x">P1</div>
+        <div class="score-mark mark-x">✕</div>
+        <div class="score-num" id="score-x">0</div>
+      </div>
+      <div class="vs-col">
+        <span>VS</span>
+        <span class="draw-num" id="draws-count">0</span>
+        <span style="font-size:10px;">DRAWS</span>
+      </div>
+      <div class="score-card" id="card-o">
+        <div class="score-name" id="name-o">P2</div>
+        <div class="score-mark mark-o">○</div>
+        <div class="score-num" id="score-o">0</div>
+      </div>
+    </div>
+    <div class="turn-banner" id="turn-banner"></div>
+    <div class="board" id="board">
+      <div class="cell" onclick="cellClick(0)"></div>
+      <div class="cell" onclick="cellClick(1)"></div>
+      <div class="cell" onclick="cellClick(2)"></div>
+      <div class="cell" onclick="cellClick(3)"></div>
+      <div class="cell" onclick="cellClick(4)"></div>
+      <div class="cell" onclick="cellClick(5)"></div>
+      <div class="cell" onclick="cellClick(6)"></div>
+      <div class="cell" onclick="cellClick(7)"></div>
+      <div class="cell" onclick="cellClick(8)"></div>
+    </div>
+    <div class="game-msg" id="game-msg"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="next-btn" onclick="nextGame()" style="display:none">▶ Next Game</button>
+      <button class="btn btn-secondary" onclick="resetAll()">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Coach Pick -->
+  <div class="screen" id="screen-coach-pick">
+    <div style="font-size:15px;color:#ccc;text-align:center;">Who is learning today? 🌟</div>
+    <div class="coach-pick">
+      <div class="coach-card" onclick="startCoach('anu')">
+        <div class="coach-avatar">⭐</div>
+        <div class="coach-info">
+          <div class="coach-level">Little Star · Age 5</div>
+          <div class="coach-name">Anu</div>
+          <div class="coach-desc">Learn the rules with fun pictures and a friendly coach!</div>
+        </div>
+      </div>
+      <div class="coach-card" onclick="startCoach('dominion')">
+        <div class="coach-avatar">🏆</div>
+        <div class="coach-info">
+          <div class="coach-level">Rising Champion · Age 7</div>
+          <div class="coach-name">Dominion</div>
+          <div class="coach-desc">Master winning moves, blocking, and sneaky tricks!</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-home')">← Back</button>
+  </div>
+
+  <!-- SCREEN: Lesson -->
+  <div class="screen" id="screen-lesson">
+    <div class="lesson-box">
+      <div class="lesson-progress" id="lesson-progress"></div>
+      <div class="coach-bubble">
+        <div class="bubble-name" id="coach-name-label">Coach Rex 🤖</div>
+        <div class="bubble-avatar" id="coach-avatar">🤖</div>
+        <div class="bubble-text" id="lesson-text">Loading...</div>
+      </div>
+      <div id="lesson-visual"></div>
+      <div id="lesson-tip-box"></div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-secondary btn-sm" id="lesson-prev-btn" onclick="lessonNav(-1)">← Back</button>
+      <button class="btn btn-primary btn-sm" id="lesson-next-btn" onclick="lessonNav(1)">Next →</button>
+    </div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-coach-pick')" style="font-size:13px;padding:8px 18px;">🏠 Choose Player</button>
+  </div>
+
+  <!-- SCREEN: Practice vs Robot -->
+  <div class="screen" id="screen-practice">
+    <div class="robot-banner">
+      <div class="robot-name" id="robot-title">🤖 Robot Rex</div>
+      <div class="robot-sub" id="robot-sub">Practice Mode — You are ✕, Rex is ○</div>
+    </div>
+    <div class="turn-banner" id="practice-turn"></div>
+    <div class="board" id="practice-board">
+      <div class="cell" onclick="practiceClick(0)"></div>
+      <div class="cell" onclick="practiceClick(1)"></div>
+      <div class="cell" onclick="practiceClick(2)"></div>
+      <div class="cell" onclick="practiceClick(3)"></div>
+      <div class="cell" onclick="practiceClick(4)"></div>
+      <div class="cell" onclick="practiceClick(5)"></div>
+      <div class="cell" onclick="practiceClick(6)"></div>
+      <div class="cell" onclick="practiceClick(7)"></div>
+      <div class="cell" onclick="practiceClick(8)"></div>
+    </div>
+    <div class="coach-hint-box" id="coach-hint">Your turn! Tap a square to play ✕</div>
+    <div class="game-msg" id="practice-msg"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="practice-next-btn" onclick="startPractice()" style="display:none">▶ Play Again</button>
+      <button class="btn btn-secondary btn-sm" onclick="goBackToLessons()">📚 Lessons</button>
+      <button class="btn btn-secondary btn-sm" onclick="showScreen('screen-home')">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: Badge / Graduation -->
+  <div class="screen" id="screen-badge">
+    <div class="badge-screen">
+      <div class="badge-icon" id="badge-icon">🏅</div>
+      <div class="stars" id="badge-stars">⭐⭐⭐</div>
+      <div class="badge-title" id="badge-title">Amazing!</div>
+      <div class="badge-msg" id="badge-msg">You finished all the lessons!</div>
+    </div>
+    <button class="btn btn-primary" onclick="startPractice()">🤖 Play vs Robot Rex!</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-home')">🏠 Home</button>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    //  GLOBAL STATE
+    // ─────────────────────────────────────────────
+    let p1Name = 'Dominion', p2Name = 'Anu';
+    let xName = '', oName = '';
+    let scores = {};
+    let draws = 0;
+    let board = Array(9).fill(null);
+    let currentTurn = 'x';
+    let gameOver = false;
+    let coinCalled = false;
+
+    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    // ─────────────────────────────────────────────
+    //  SCREENS
+    // ─────────────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    function goToNames() { showScreen('screen-names'); }
+    function goToCoachPick() { showScreen('screen-coach-pick'); }
+
+    // ─────────────────────────────────────────────
+    //  2-PLAYER GAME
+    // ─────────────────────────────────────────────
+    function goToCoinFlip() {
+      p1Name = document.getElementById('name1').value.trim() || 'Player 1';
+      p2Name = document.getElementById('name2').value.trim() || 'Player 2';
+      document.getElementById('coin-names').textContent = p1Name + ' vs ' + p2Name;
+      document.getElementById('coin-caller').textContent = p1Name + ', call it before the flip!';
+      document.getElementById('call-buttons').style.display = 'flex';
+      document.getElementById('flip-result').textContent = '';
+      document.getElementById('flip-result').className = 'flip-result';
+      const coin = document.getElementById('coin');
+      coin.classList.remove('flipping');
+      coin.style.transform = '';
+      coinCalled = false;
+      showScreen('screen-coin');
+    }
+
+    function makeCoinCall(call) {
+      if (coinCalled) return;
+      coinCalled = true;
+      document.getElementById('call-buttons').style.display = 'none';
+      const result = Math.random() < 0.5 ? 'heads' : 'tails';
+      const coin = document.getElementById('coin');
+      const won = (call === result);
+      const extraSpins = (3 + Math.floor(Math.random() * 3)) * 360;
+      const endAngle = result === 'tails' ? extraSpins + 180 : extraSpins;
+      coin.style.setProperty('--flip-end', endAngle + 'deg');
+      coin.classList.add('flipping');
+      setTimeout(() => {
+        coin.classList.remove('flipping');
+        coin.style.transform = 'rotateY(' + (endAngle % 360) + 'deg)';
+        const resultEl = document.getElementById('flip-result');
+        if (won) {
+          resultEl.textContent = '🎉 ' + p1Name + ' called it! Goes first as ✕';
+          resultEl.className = 'flip-result win';
+          xName = p1Name; oName = p2Name;
+        } else {
+          resultEl.textContent = '😄 ' + p2Name + ' wins the flip! Goes first as ✕';
+          resultEl.className = 'flip-result lose';
+          xName = p2Name; oName = p1Name;
+        }
+        if (!scores[p1Name]) scores[p1Name] = 0;
+        if (!scores[p2Name]) scores[p2Name] = 0;
+        setTimeout(startGame, 1800);
+      }, 1450);
+    }
+
+    function startGame() {
+      board = Array(9).fill(null);
+      currentTurn = 'x';
+      gameOver = false;
+      document.getElementById('name-x').textContent = xName;
+      document.getElementById('name-o').textContent = oName;
+      document.getElementById('score-x').textContent = scores[xName] || 0;
+      document.getElementById('score-o').textContent = scores[oName] || 0;
+      document.getElementById('draws-count').textContent = draws;
+      const cells = document.querySelectorAll('#board .cell');
+      cells.forEach(c => { c.textContent = ''; c.className = 'cell'; });
+      document.getElementById('game-msg').textContent = '';
+      document.getElementById('game-msg').className = 'game-msg';
+      document.getElementById('next-btn').style.display = 'none';
+      updateTurnBanner(); updateScoreCards();
+      showScreen('screen-game');
+    }
+
+    function cellClick(i) {
+      if (gameOver || board[i]) return;
+      board[i] = currentTurn;
+      const cells = document.querySelectorAll('#board .cell');
+      cells[i].textContent = currentTurn === 'x' ? '✕' : '○';
+      cells[i].classList.add('taken', currentTurn === 'x' ? 'x-cell' : 'o-cell', 'pop');
+      const win = checkWin(board);
+      if (win) {
+        win.forEach(idx => cells[idx].classList.add('winner-cell'));
+        const winnerName = currentTurn === 'x' ? xName : oName;
+        const mark = currentTurn === 'x' ? '✕' : '○';
+        const msgEl = document.getElementById('game-msg');
+        msgEl.textContent = '🏆 ' + winnerName + ' wins with ' + mark + '!';
+        msgEl.className = 'game-msg win-msg';
+        scores[winnerName] = (scores[winnerName] || 0) + 1;
+        document.getElementById(currentTurn === 'x' ? 'score-x' : 'score-o').textContent = scores[winnerName];
+        gameOver = true;
+        document.getElementById('next-btn').style.display = 'inline-block';
+        document.getElementById('turn-banner').textContent = '';
+        return;
+      }
+      if (board.every(v => v)) {
+        document.getElementById('game-msg').textContent = "🤝 It's a draw! Well played both!";
+        document.getElementById('game-msg').className = 'game-msg draw-msg';
+        draws++;
+        document.getElementById('draws-count').textContent = draws;
+        gameOver = true;
+        document.getElementById('next-btn').style.display = 'inline-block';
+        document.getElementById('turn-banner').textContent = '';
+        return;
+      }
+      currentTurn = currentTurn === 'x' ? 'o' : 'x';
+      updateTurnBanner(); updateScoreCards();
+    }
+
+    function checkWin(b) {
+      for (const combo of WINS) {
+        const [a, c, d] = combo;
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) return combo;
+      }
+      return null;
+    }
+
+    function updateTurnBanner() {
+      const name = currentTurn === 'x' ? xName : oName;
+      const mark = currentTurn === 'x' ? '✕' : '○';
+      document.getElementById('turn-banner').textContent = name + "'s turn (" + mark + ')';
+    }
+
+    function updateScoreCards() {
+      document.getElementById('card-x').classList.toggle('active-player', currentTurn === 'x' && !gameOver);
+      document.getElementById('card-o').classList.toggle('active-player', currentTurn === 'o' && !gameOver);
+    }
+
+    function nextGame() {
+      [xName, oName] = [oName, xName];
+      document.getElementById('name-x').textContent = xName;
+      document.getElementById('name-o').textContent = oName;
+      document.getElementById('score-x').textContent = scores[xName] || 0;
+      document.getElementById('score-o').textContent = scores[oName] || 0;
+      startGame();
+    }
+
+    function resetAll() {
+      scores = {}; draws = 0; coinCalled = false;
+      showScreen('screen-home');
+    }
+
+    // ─────────────────────────────────────────────
+    //  COACH / LESSON SYSTEM
+    // ─────────────────────────────────────────────
+    let coachPlayer = 'anu';
+    let lessonIndex = 0;
+
+    const LESSONS = {
+      anu: [
+        {
+          text: "Hi! I'm Coach Rex! 🤖 I'm going to teach you how to play X and O! It's SO fun! Are you ready? Let's go! 🎉",
+          visual: 'board-empty',
+          tip: null
+        },
+        {
+          text: "We have a board with 9 squares — like a big grid! You and your friend each pick a square on every turn.",
+          visual: 'board-empty',
+          tip: '💡 Count the squares with your finger — 1, 2, 3... 9!'
+        },
+        {
+          text: "One player is ✕ (that's the red X!) and the other is ○ (that's the blue O!). You take turns picking squares!",
+          visual: 'board-xo-intro',
+          tip: null
+        },
+        {
+          text: "The first player to get THREE of their marks in a row WINS! The row can go across ➡, down ⬇, or diagonal ↗!",
+          visual: 'win-patterns',
+          tip: '💡 Look at all the ways to win!'
+        },
+        {
+          text: "If ALL 9 squares are filled and nobody got 3 in a row, it's a DRAW! That means you both played great! 🤝",
+          visual: 'board-draw',
+          tip: null
+        },
+        {
+          text: "You've learned all the rules! 🌟 Now let's practice against me — Robot Rex! I'll go easy on you! 😄",
+          visual: null,
+          tip: null,
+          isFinal: true
+        }
+      ],
+      dominion: [
+        {
+          text: "Welcome, Champion! 🏆 I'm Coach Rex. You already know the basics — now let's learn how to WIN every time!",
+          visual: 'board-empty',
+          tip: null
+        },
+        {
+          text: "Rule #1 — The Middle is POWER! 💥 If you go first, ALWAYS start in the centre square. It gives you the most winning paths!",
+          visual: 'board-center',
+          tip: '💡 The centre connects 4 winning lines — corners only connect 3!'
+        },
+        {
+          text: "Rule #2 — BLOCK your opponent! 🛡 If your opponent has TWO in a row, put your mark there IMMEDIATELY or they'll win!",
+          visual: 'board-block',
+          tip: '💡 Always check if your opponent is about to win before you move!'
+        },
+        {
+          text: "Rule #3 — Corners are your friends! 🎯 After the centre, corners are the strongest squares. They connect 3 winning lines each.",
+          visual: 'board-corners',
+          tip: null
+        },
+        {
+          text: "Rule #4 — The FORK trick! 🍴 Set up TWO ways to win at once. Then your opponent can only block one — and you win the other!",
+          visual: 'board-fork',
+          tip: '💡 A fork = two winning threats at the same time. Your opponent cannot stop both!'
+        },
+        {
+          text: "You're ready, Champion! 🏆 Now beat Robot Rex and show what you've learned! Rex is smarter this time... 😈",
+          visual: null,
+          tip: null,
+          isFinal: true
+        }
+      ]
+    };
+
+    function startCoach(player) {
+      coachPlayer = player;
+      lessonIndex = 0;
+      renderLesson();
+      showScreen('screen-lesson');
+    }
+
+    function renderLesson() {
+      const lessons = LESSONS[coachPlayer];
+      const lesson = lessons[lessonIndex];
+      const isAnu = coachPlayer === 'anu';
+
+      // progress dots
+      const prog = document.getElementById('lesson-progress');
+      prog.innerHTML = '';
+      lessons.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'lesson-dot' + (i < lessonIndex ? ' done' : i === lessonIndex ? ' active' : '');
+        prog.appendChild(dot);
+      });
+
+      document.getElementById('coach-name-label').textContent = 'Coach Rex 🤖';
+      document.getElementById('coach-avatar').textContent = isAnu ? '🤖' : '🤖';
+      document.getElementById('lesson-text').textContent = lesson.text;
+
+      // visual
+      const vis = document.getElementById('lesson-visual');
+      vis.innerHTML = '';
+      if (lesson.visual) vis.innerHTML = buildVisual(lesson.visual, coachPlayer);
+
+      // tip
+      const tipBox = document.getElementById('lesson-tip-box');
+      tipBox.innerHTML = lesson.tip ? '<div class="lesson-tip">' + lesson.tip + '</div>' : '';
+
+      // nav buttons
+      document.getElementById('lesson-prev-btn').style.display = lessonIndex === 0 ? 'none' : 'inline-block';
+      document.getElementById('lesson-next-btn').textContent = lesson.isFinal ? '🎓 Finish!' : 'Next →';
+    }
+
+    function lessonNav(dir) {
+      const lessons = LESSONS[coachPlayer];
+      if (dir === 1 && lessonIndex === lessons.length - 1) {
+        showBadge();
+        return;
+      }
+      lessonIndex = Math.max(0, Math.min(lessons.length - 1, lessonIndex + dir));
+      renderLesson();
+    }
+
+    function goBackToLessons() {
+      lessonIndex = LESSONS[coachPlayer].length - 1;
+      renderLesson();
+      showScreen('screen-lesson');
+    }
+
+    function buildVisual(type, player) {
+      const empty = () => '<div class="lesson-cell"></div>';
+      const X = (cls) => '<div class="lesson-cell lx ' + (cls||'') + '">✕</div>';
+      const O = (cls) => '<div class="lesson-cell lo ' + (cls||'') + '">○</div>';
+      const E = (cls) => '<div class="lesson-cell ' + (cls||'') + '"></div>';
+
+      let html = '';
+
+      if (type === 'board-empty') {
+        html = '<div class="lesson-board">';
+        for (let i = 0; i < 9; i++) html += empty();
+        html += '</div>';
+      }
+      else if (type === 'board-xo-intro') {
+        html = '<div class="lesson-board">';
+        html += X() + E() + O();
+        html += E() + X() + E();
+        html += O() + E() + X();
+        html += '</div>';
+      }
+      else if (type === 'win-patterns') {
+        html = '<div class="win-patterns">';
+        // row win
+        html += '<div class="pattern-row"><div class="pattern-label">Row ➡</div><div class="mini-board">';
+        html += '<div class="mini-cell win-x">✕</div><div class="mini-cell win-x">✕</div><div class="mini-cell win-x">✕</div>';
+        html += '<div class="mini-cell"></div><div class="mini-cell">○</div><div class="mini-cell"></div>';
+        html += '<div class="mini-cell"></div><div class="mini-cell"></div><div class="mini-cell">○</div>';
+        html += '</div></div>';
+        // col win
+        html += '<div class="pattern-row"><div class="pattern-label">Column ⬇</div><div class="mini-board">';
+        html += '<div class="mini-cell win-o">○</div><div class="mini-cell">✕</div><div class="mini-cell"></div>';
+        html += '<div class="mini-cell win-o">○</div><div class="mini-cell">✕</div><div class="mini-cell"></div>';
+        html += '<div class="mini-cell win-o">○</div><div class="mini-cell"></div><div class="mini-cell">✕</div>';
+        html += '</div></div>';
+        // diagonal win
+        html += '<div class="pattern-row"><div class="pattern-label">Diagonal ↗</div><div class="mini-board">';
+        html += '<div class="mini-cell win-x">✕</div><div class="mini-cell"></div><div class="mini-cell">○</div>';
+        html += '<div class="mini-cell">○</div><div class="mini-cell win-x">✕</div><div class="mini-cell"></div>';
+        html += '<div class="mini-cell"></div><div class="mini-cell">○</div><div class="mini-cell win-x">✕</div>';
+        html += '</div></div>';
+        html += '</div>';
+      }
+      else if (type === 'board-draw') {
+        html = '<div class="lesson-board">';
+        html += X() + O() + X();
+        html += X() + O() + O();
+        html += O() + X() + O();
+        html += '</div>';
+        html += '<div style="text-align:center;font-size:13px;color:#aaa;margin-top:8px;">All 9 squares filled — nobody won = DRAW 🤝</div>';
+      }
+      else if (type === 'board-center') {
+        html = '<div class="lesson-board">';
+        html += E() + E() + E();
+        html += E() + X('center') + E();
+        html += E() + E() + E();
+        html += '</div>';
+        html += '<div style="text-align:center;font-size:13px;color:#a855f7;margin-top:8px;">Start here — maximum power! 💥</div>';
+      }
+      else if (type === 'board-block') {
+        html = '<div class="lesson-board">';
+        html += O('') + O('') + E('blocked');
+        html += E() + X() + E();
+        html += E() + E() + E();
+        html += '</div>';
+        html += '<div style="text-align:center;font-size:13px;color:#f87171;margin-top:8px;">⚠️ Block that square before ○ wins!</div>';
+      }
+      else if (type === 'board-corners') {
+        html = '<div class="lesson-board">';
+        html += X('hint') + E() + X('hint');
+        html += E() + X() + E();
+        html += X('hint') + E() + X('hint');
+        html += '</div>';
+        html += '<div style="text-align:center;font-size:13px;color:#ffd200;margin-top:8px;">Corners (glowing) = strong positions! 🎯</div>';
+      }
+      else if (type === 'board-fork') {
+        html = '<div class="lesson-board">';
+        html += X() + E() + E();
+        html += O() + X() + E();
+        html += E() + E() + E();
+        html += '</div>';
+        html += '<div style="text-align:center;font-size:13px;color:#4ade80;margin-top:8px;">✕ threatens TWO wins — ○ can only block one! 🍴</div>';
+      }
+
+      return html;
+    }
+
+    function showBadge() {
+      const isAnu = coachPlayer === 'anu';
+      document.getElementById('badge-icon').textContent = isAnu ? '🌟' : '🏆';
+      document.getElementById('badge-stars').textContent = isAnu ? '⭐⭐⭐' : '🏅🏅🏅';
+      document.getElementById('badge-title').textContent = isAnu ? 'You did it, Anu!' : 'Champion, Dominion!';
+      document.getElementById('badge-msg').textContent = isAnu
+        ? 'You learned all the rules of X and O! Now let\'s practice with Robot Rex — he\'ll go easy, promise! 😄'
+        : 'You\'ve mastered the winning strategies! Robot Rex is ready for a challenge. Show him what you\'ve got! 🔥';
+      showScreen('screen-badge');
+    }
+
+    // ─────────────────────────────────────────────
+    //  PRACTICE vs ROBOT REX
+    // ─────────────────────────────────────────────
+    let practiceBoard = Array(9).fill(null);
+    let practiceOver = false;
+    let playerMark = 'x';
+    let robotMark = 'o';
+
+    function startPractice() {
+      practiceBoard = Array(9).fill(null);
+      practiceOver = false;
+      playerMark = 'x';
+      robotMark = 'o';
+
+      const isAnu = coachPlayer === 'anu';
+      document.getElementById('robot-title').textContent = '🤖 Robot Rex';
+      document.getElementById('robot-sub').textContent = isAnu
+        ? 'Practice Mode — You are ✕, Rex is ○ (Easy!)'
+        : 'Challenge Mode — You are ✕, Rex is ○ (Smart!)';
+
+      const cells = document.querySelectorAll('#practice-board .cell');
+      cells.forEach(c => { c.textContent = ''; c.className = 'cell'; });
+
+      document.getElementById('practice-msg').textContent = '';
+      document.getElementById('practice-msg').className = 'game-msg';
+      document.getElementById('practice-next-btn').style.display = 'none';
+      document.getElementById('coach-hint').textContent = 'Your turn! Tap a square to play ✕';
+      document.getElementById('practice-turn').textContent = 'Your turn (✕)';
+      showScreen('screen-practice');
+    }
+
+    function practiceClick(i) {
+      if (practiceOver || practiceBoard[i]) return;
+      practiceBoard[i] = playerMark;
+
+      const cells = document.querySelectorAll('#practice-board .cell');
+      cells[i].textContent = '✕';
+      cells[i].classList.add('taken', 'x-cell', 'pop');
+
+      const win = checkWin(practiceBoard);
+      if (win) {
+        win.forEach(idx => cells[idx].classList.add('winner-cell'));
+        document.getElementById('practice-msg').textContent = '🎉 You beat Robot Rex! Amazing!';
+        document.getElementById('practice-msg').className = 'game-msg win-msg';
+        document.getElementById('coach-hint').textContent = coachPlayer === 'anu' ? '🌟 Brilliant! You\'re a star!' : '🏆 Perfect strategy, Champion!';
+        document.getElementById('practice-turn').textContent = '';
+        practiceOver = true;
+        document.getElementById('practice-next-btn').style.display = 'inline-block';
+        return;
+      }
+      if (practiceBoard.every(v => v)) {
+        document.getElementById('practice-msg').textContent = "🤝 Draw! Great effort!";
+        document.getElementById('practice-msg').className = 'game-msg draw-msg';
+        document.getElementById('coach-hint').textContent = "So close! Try again!";
+        document.getElementById('practice-turn').textContent = '';
+        practiceOver = true;
+        document.getElementById('practice-next-btn').style.display = 'inline-block';
+        return;
+      }
+
+      document.getElementById('practice-turn').textContent = '🤖 Rex is thinking...';
+      document.getElementById('coach-hint').textContent = '🤖 Robot Rex is thinking...';
+      setTimeout(() => robotMove(cells), coachPlayer === 'anu' ? 900 : 500);
+    }
+
+    function robotMove(cells) {
+      if (practiceOver) return;
+      const isAnu = coachPlayer === 'anu';
+      let move = -1;
+
+      if (isAnu) {
+        // Easy Rex: 60% random, 40% tries to win or block
+        if (Math.random() < 0.6) {
+          move = randomMove();
+        } else {
+          move = findWinOrBlock(robotMark) || findWinOrBlock(playerMark) || randomMove();
+        }
+      } else {
+        // Smart Rex: always tries to win, then block, then centre, then corner, then random
+        move = findWinOrBlock(robotMark) || findWinOrBlock(playerMark) || (practiceBoard[4] === null ? 4 : -1);
+        if (move === -1) move = [0,2,6,8].find(c => practiceBoard[c] === null) || randomMove();
+      }
+
+      if (move === -1 || practiceBoard[move] !== null) move = randomMove();
+      if (move === -1) return;
+
+      practiceBoard[move] = robotMark;
+      cells[move].textContent = '○';
+      cells[move].classList.add('taken', 'o-cell', 'pop');
+
+      const win = checkWin(practiceBoard);
+      if (win) {
+        win.forEach(idx => cells[idx].classList.add('winner-cell'));
+        document.getElementById('practice-msg').textContent = '🤖 Rex wins this one! Try again!';
+        document.getElementById('practice-msg').className = 'game-msg draw-msg';
+        document.getElementById('coach-hint').textContent = isAnu ? '😄 Keep trying, you\'ll get it!' : '😈 Rex got you! Remember the blocking rule!';
+        document.getElementById('practice-turn').textContent = '';
+        practiceOver = true;
+        document.getElementById('practice-next-btn').style.display = 'inline-block';
+        return;
+      }
+      if (practiceBoard.every(v => v)) {
+        document.getElementById('practice-msg').textContent = "🤝 Draw! Well played!";
+        document.getElementById('practice-msg').className = 'game-msg draw-msg';
+        document.getElementById('coach-hint').textContent = 'Great game! Play again!';
+        document.getElementById('practice-turn').textContent = '';
+        practiceOver = true;
+        document.getElementById('practice-next-btn').style.display = 'inline-block';
+        return;
+      }
+
+      // give a hint to the player
+      const hint = getHint();
+      document.getElementById('coach-hint').textContent = hint;
+      document.getElementById('practice-turn').textContent = 'Your turn (✕)';
+
+      // highlight hint cell gently
+      document.querySelectorAll('#practice-board .cell').forEach(c => c.classList.remove('hint-cell'));
+      const hintCell = getHintCell();
+      if (hintCell !== -1 && cells[hintCell] && !practiceBoard[hintCell]) {
+        cells[hintCell].classList.add('hint-cell');
+      }
+    }
+
+    function findWinOrBlock(mark) {
+      for (const combo of WINS) {
+        const [a, b, c] = combo;
+        const vals = [practiceBoard[a], practiceBoard[b], practiceBoard[c]];
+        const markCount = vals.filter(v => v === mark).length;
+        const emptyCount = vals.filter(v => v === null).length;
+        if (markCount === 2 && emptyCount === 1) {
+          return [a, b, c][vals.indexOf(null)];
+        }
+      }
+      return null;
+    }
+
+    function randomMove() {
+      const empty = practiceBoard.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
+      return empty.length ? empty[Math.floor(Math.random() * empty.length)] : -1;
+    }
+
+    function getHint() {
+      const isAnu = coachPlayer === 'anu';
+      // check if player can win
+      const win = findWinOrBlock(playerMark);
+      if (win !== null) return isAnu ? '🌟 Ooh, you can WIN! Look carefully!' : '👀 You have a winning move — find it!';
+      // check if need to block
+      const block = findWinOrBlock(robotMark);
+      if (block !== null) return isAnu ? '⚠️ Watch out! Block Rex!' : '🛡 Rex is about to win — block him!';
+      if (practiceBoard[4] === null) return isAnu ? '💡 The middle square is powerful!' : '💡 Centre is your best move!';
+      return isAnu ? '😊 Pick any square you like!' : '🎯 Think about corners for a strong position!';
+    }
+
+    function getHintCell() {
+      const win = findWinOrBlock(playerMark);
+      if (win !== null) return win;
+      const block = findWinOrBlock(robotMark);
+      if (block !== null) return block;
+      if (practiceBoard[4] === null) return 4;
+      return -1;
+    }
+
+    // ─────────────────────────────────────────────
+    //  BACKGROUND MUSIC — Web Audio API
+    //  Fun & playful upbeat kids melody, loops forever
+    // ─────────────────────────────────────────────
+    let audioCtx = null;
+    let musicPlaying = false;
+    let musicNodes = [];
+    let musicScheduler = null;
+    let nextNoteTime = 0;
+    let currentNote = 0;
+
+    // Upbeat pentatonic melody (C major pentatonic: C D E G A)
+    // Frequencies in Hz, 0 = rest
+    const MELODY = [
+      523.25, 659.25, 783.99, 659.25, 523.25, 392.00,
+      440.00, 523.25, 659.25, 783.99, 1046.50, 783.99,
+      659.25, 523.25, 440.00, 392.00,
+      523.25, 523.25, 659.25, 783.99, 659.25, 440.00,
+      392.00, 440.00, 523.25, 659.25, 523.25, 392.00,
+      440.00, 523.25, 392.00, 0
+    ];
+
+    // Upbeat bassline to go with it
+    const BASS = [
+      261.63, 0, 261.63, 0, 261.63, 0, 196.00, 0,
+      220.00, 0, 261.63, 0, 261.63, 0, 196.00, 0,
+      261.63, 0, 261.63, 0, 261.63, 0, 196.00, 0,
+      220.00, 0, 261.63, 0, 196.00, 0, 261.63, 0
+    ];
+
+    const NOTE_DUR = 0.18;   // seconds per note
+    const LOOK_AHEAD = 0.25; // how far ahead to schedule
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playNote(freq, startTime, duration, gainVal, type) {
+      if (!freq || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const masterGain = audioCtx.createGain();
+
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(gainVal, startTime + 0.02);
+      gainNode.gain.setValueAtTime(gainVal, startTime + duration - 0.04);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+
+      masterGain.gain.value = 0.18;
+
+      osc.connect(gainNode);
+      gainNode.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+      musicNodes.push(osc);
+    }
+
+    function scheduleNotes() {
+      while (nextNoteTime < audioCtx.currentTime + LOOK_AHEAD) {
+        const idx = currentNote % MELODY.length;
+
+        // melody — bright & bouncy
+        playNote(MELODY[idx], nextNoteTime, NOTE_DUR * 0.85, 0.6, 'triangle');
+
+        // bass — warm & round
+        playNote(BASS[idx], nextNoteTime, NOTE_DUR * 1.1, 0.4, 'sine');
+
+        // light percussion click on beats 0, 8, 16, 24
+        if (idx % 8 === 0) {
+          const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+          const src = audioCtx.createBufferSource();
+          const gn = audioCtx.createGain();
+          src.buffer = buf;
+          gn.gain.value = 0.06;
+          src.connect(gn);
+          gn.connect(audioCtx.destination);
+          src.start(nextNoteTime);
+          musicNodes.push(src);
+        }
+
+        nextNoteTime += NOTE_DUR;
+        currentNote++;
+      }
+    }
+
+    function startMusic() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      nextNoteTime = audioCtx.currentTime + 0.05;
+      currentNote = 0;
+      musicPlaying = true;
+      musicScheduler = setInterval(scheduleNotes, 50);
+      document.getElementById('music-btn').textContent = '🎵';
+      document.getElementById('music-btn').classList.add('playing');
+    }
+
+    function stopMusic() {
+      musicPlaying = false;
+      if (musicScheduler) { clearInterval(musicScheduler); musicScheduler = null; }
+      musicNodes.forEach(n => { try { n.stop(); } catch(e){} });
+      musicNodes = [];
+      document.getElementById('music-btn').textContent = '🔇';
+      document.getElementById('music-btn').classList.remove('playing');
+    }
+
+    function toggleMusic() {
+      if (musicPlaying) { stopMusic(); }
+      else { startMusic(); }
+    }
+
+    // Auto-start on first user interaction (browser policy)
+    function autoStartMusic() {
+      if (!musicPlaying) startMusic();
+      document.removeEventListener('touchstart', autoStartMusic);
+      document.removeEventListener('click', autoStartMusic);
+    }
+    document.addEventListener('touchstart', autoStartMusic, { once: true });
+    document.addEventListener('click', autoStartMusic, { once: true });
+
+
+  // Load profile name into Player 1 field
+  (function() {
+    var PROFILE_KEY = 'kk_profile';
+    try {
+      var r = localStorage.getItem(PROFILE_KEY);
+      if (r) {
+        var p = JSON.parse(r);
+        if (p && p.name) {
+          var n1 = document.getElementById('name1');
+          if (n1 && !n1.value) n1.value = p.name;
+        }
+      }
+    } catch(e) {}
+  })();
+  </script>
+</body>
+</html>
