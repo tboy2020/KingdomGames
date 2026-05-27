@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Kingdom Kids — Bible Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Nunito',sans-serif;min-height:100vh;background:linear-gradient(160deg,#2d1b00 0%,#1a0e00 60%,#0d0d1a 100%);display:flex;flex-direction:column;align-items:center;padding:16px 14px 48px;color:#fff}
+    .music-btn{position:fixed;top:14px;right:16px;z-index:999;background:#2d1b00;border:2px solid #8b6914;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,transform .1s;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+    .music-btn.playing{border-color:#ffd200;animation:mPulse 1.5s ease-in-out infinite}
+    @keyframes mPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,210,0,.4)}50%{box-shadow:0 0 0 8px rgba(255,210,0,0)}}
+    .back-btn{position:fixed;top:14px;left:16px;z-index:999;background:#2d1b00;border:2px solid #8b6914;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;color:#ffd200;cursor:pointer;text-decoration:none}
+    .title{font-family:'Fredoka One',cursive;font-size:36px;letter-spacing:2px;background:linear-gradient(135deg,#f7971e,#ffd200);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:2px;margin-top:8px}
+    .subtitle{font-size:12px;color:#8b6914;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px;text-align:center}
+    .screen{width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:14px}
+    .screen.active{display:flex}
+    .btn{font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:1px;padding:12px 28px;border:none;border-radius:50px;cursor:pointer;transition:transform .1s,box-shadow .1s;box-shadow:0 4px 15px rgba(0,0,0,.4)}
+    .btn:active{transform:scale(.96)}
+    .btn-gold{background:linear-gradient(135deg,#f7971e,#ffd200);color:#1a0e00}
+    .btn-warm{background:#2d1b00;border:2px solid #8b6914;color:#ffd200;font-size:14px;padding:10px 22px}
+    .btn-sm{font-size:14px;padding:9px 20px}
+
+    /* PLAYER SELECT */
+    .p-cards{width:100%;display:flex;flex-direction:column;gap:12px}
+    .p-card{background:#2d1b00;border:2px solid #8b6914;border-radius:18px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .2s,background .2s}
+    .p-card:hover{border-color:#ffd200;background:#3a2200}
+    .p-avatar{font-size:40px;flex-shrink:0}
+    .p-name{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd200}
+    .p-sub{font-size:12px;color:#8b6914;margin-top:2px}
+
+    /* MODE SELECT */
+    .mode-cards{width:100%;display:flex;flex-direction:column;gap:12px}
+    .mode-card{background:#2d1b00;border:2px solid #8b6914;border-radius:18px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .2s}
+    .mode-card:hover{border-color:#ffd200}
+    .mode-icon{font-size:36px;flex-shrink:0}
+    .mode-title{font-family:'Fredoka One',cursive;font-size:20px;color:#ffd200}
+    .mode-desc{font-size:12px;color:#aaa;margin-top:2px}
+
+    /* GAME HUB */
+    .game-grid{width:100%;display:flex;flex-direction:column;gap:12px}
+    .game-tile{background:#2d1b00;border:2px solid #8b6914;border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .2s,background .2s}
+    .game-tile:hover{border-color:#ffd200;background:#3a2200}
+    .game-tile .gt-icon{font-size:34px;flex-shrink:0}
+    .game-tile .gt-title{font-family:'Fredoka One',cursive;font-size:18px;color:#ffd200}
+    .game-tile .gt-desc{font-size:12px;color:#aaa;margin-top:2px}
+    .game-tile .gt-score{font-family:'Fredoka One',cursive;font-size:14px;color:#f7971e;margin-top:3px}
+
+    /* SHARED GAME UI */
+    .game-topbar{width:100%;background:#2d1b00;border:2px solid #8b6914;border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    .topbar-player{font-size:13px;font-weight:800;color:#ffd200}
+    .topbar-score{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd200}
+    .topbar-label{font-size:10px;color:#8b6914;text-transform:uppercase}
+    .verse-ref{font-size:11px;color:#8b6914;font-style:italic;text-align:center;margin-top:2px}
+
+    /* QUIZ */
+    .quiz-box{width:100%;background:#2d1b00;border:2px solid #8b6914;border-radius:18px;padding:20px 16px}
+    .quiz-story-icon{font-size:52px;text-align:center;margin-bottom:10px}
+    .quiz-q{font-size:16px;font-weight:800;color:#fff;line-height:1.5;text-align:center;margin-bottom:16px}
+    .quiz-opts{display:flex;flex-direction:column;gap:10px}
+    .quiz-opt{background:#1a0e00;border:2px solid #8b6914;border-radius:12px;padding:12px 16px;cursor:pointer;font-size:14px;font-weight:700;color:#e0c080;transition:border-color .2s,background .2s;text-align:left}
+    .quiz-opt:hover{border-color:#ffd200;background:#2d1b00}
+    .quiz-opt.correct{border-color:#4ade80;background:#0d2b0d;color:#4ade80}
+    .quiz-opt.wrong{border-color:#f87171;background:#2b0d0d;color:#f87171}
+    .quiz-feedback{font-size:14px;font-weight:800;text-align:center;min-height:20px;margin-top:8px}
+    .quiz-feedback.correct{color:#4ade80}
+    .quiz-feedback.wrong{color:#f87171}
+    .quiz-progress{font-size:12px;color:#8b6914;text-align:center}
+
+    /* VERSE BUILDER */
+    .verse-display{background:#1a0e00;border:2px solid #8b6914;border-radius:14px;padding:14px;text-align:center;min-height:60px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:10px}
+    .verse-slot{background:#2d1b00;border:2px dashed #8b6914;border-radius:8px;padding:6px 12px;font-size:14px;font-weight:700;color:#8b6914;min-width:50px;text-align:center}
+    .verse-slot.filled{border-color:#ffd200;color:#ffd200;background:#3a2200}
+    .verse-tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+    .verse-tile{background:#2d1b00;border:2px solid #f7971e;border-radius:10px;padding:8px 14px;font-size:14px;font-weight:800;color:#ffd200;cursor:pointer;transition:transform .1s,background .2s}
+    .verse-tile:active{transform:scale(.95)}
+    .verse-tile.used{opacity:.3;cursor:default}
+    .verse-ref-box{background:#1a0e00;border-radius:10px;padding:8px 12px;font-size:13px;color:#8b6914;text-align:center;font-style:italic}
+
+    /* WORD SEARCH */
+    .ws-grid{display:grid;gap:3px;margin:0 auto 12px}
+    .ws-cell{width:34px;height:34px;background:#1a0e00;border:1px solid #3a2200;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:16px;color:#e0c080;cursor:pointer;transition:background .15s,color .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+    .ws-cell.selected{background:#3a2200;border-color:#ffd200;color:#ffd200}
+    .ws-cell.found{background:#0d2b0d;border-color:#4ade80;color:#4ade80}
+    .ws-words{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px}
+    .ws-word{background:#2d1b00;border:1px solid #8b6914;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:#e0c080}
+    .ws-word.found-word{background:#0d2b0d;border-color:#4ade80;color:#4ade80;text-decoration:line-through}
+
+    /* STORY ADVENTURE */
+    .story-box{width:100%;background:#2d1b00;border:2px solid #8b6914;border-radius:18px;padding:18px 16px}
+    .story-icon{font-size:56px;text-align:center;margin-bottom:10px}
+    .story-title{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd200;text-align:center;margin-bottom:8px}
+    .story-text{font-size:14px;color:#e0c080;line-height:1.7;margin-bottom:16px}
+    .story-choices{display:flex;flex-direction:column;gap:10px}
+    .story-choice{background:#1a0e00;border:2px solid #8b6914;border-radius:12px;padding:12px 16px;cursor:pointer;font-size:14px;font-weight:700;color:#e0c080;transition:border-color .2s,background .2s}
+    .story-choice:hover{border-color:#ffd200;background:#2d1b00}
+    .story-choice.correct{border-color:#4ade80;background:#0d2b0d;color:#4ade80}
+    .story-choice.wrong{border-color:#f87171;background:#2b0d0d;color:#f87171}
+    .story-feedback{background:#1a0e00;border-radius:12px;padding:12px;font-size:13px;color:#e0c080;line-height:1.5;display:none;margin-top:8px}
+    .story-feedback.show{display:block}
+    .story-verse{background:#3a2200;border-left:4px solid #ffd200;border-radius:0 10px 10px 0;padding:10px 14px;font-size:13px;color:#ffd200;font-style:italic;margin-top:10px;display:none}
+    .story-verse.show{display:block}
+    .story-progress{font-size:12px;color:#8b6914;text-align:center}
+
+    /* CHARACTER MATCH */
+    .match-grid{display:grid;gap:8px;width:100%;max-width:340px;margin:0 auto}
+    .match-card{aspect-ratio:1;background:#2d1b00;border:2px solid #8b6914;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;user-select:none;-webkit-tap-highlight-color:transparent;padding:4px}
+    .match-card .mc-front{display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%}
+    .match-card.flipped .mc-front{display:flex}
+    .match-card .mc-back{font-size:28px}
+    .match-card.flipped .mc-back{display:none}
+    .match-card .mc-icon{font-size:24px}
+    .match-card .mc-name{font-size:9px;font-weight:800;color:#ffd200;text-align:center;line-height:1.2}
+    .match-card.matched{background:#0d2b0d;border-color:#4ade80;cursor:default}
+    .match-card.wrong-flash{background:#2b0d0d;border-color:#f87171}
+    .match-timer{font-family:'Fredoka One',cursive;font-size:28px;color:#ffd200}
+    .match-pairs{font-size:13px;color:#8b6914;text-align:center}
+
+    /* RESULTS */
+    .result-banner{width:100%;background:#2d1b00;border:2px solid #ffd200;border-radius:16px;padding:16px;text-align:center}
+    .result-icon{font-size:52px;margin-bottom:6px}
+    .result-title{font-family:'Fredoka One',cursive;font-size:26px;color:#ffd200;margin-bottom:6px}
+    .result-sub{font-size:14px;color:#aaa}
+    .result-verse{background:#1a0e00;border-left:4px solid #ffd200;border-radius:0 10px 10px 0;padding:10px 14px;font-size:13px;color:#ffd200;font-style:italic;margin-top:10px;text-align:left}
+    .action-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .stars-row{font-size:32px;letter-spacing:6px;margin:6px 0}
+  </style>
+</head>
+<body>
+
+<button class="music-btn playing" id="music-btn" onclick="toggleMusic()" title="Toggle music">🎵</button>
+<a class="back-btn" href="../index.html">← Home</a>
+
+<div class="title">✝️ Kingdom Kids</div>
+<div class="subtitle">Bible Games · Dominion &amp; Anu</div>
+
+<!-- SCREEN: Player Select -->
+<div class="screen active" id="screen-player">
+  <div style="font-size:15px;color:#8b6914;text-align:center">Who is playing? 🙏</div>
+  <div class="p-cards">
+    <div class="p-card" onclick="selectPlayer('dominion')">
+      <div class="p-avatar">🏆</div>
+      <div><div class="p-name">Dominion</div><div class="p-sub">Age 7 · Rising Champion</div></div>
+    </div>
+    <div class="p-card" onclick="selectPlayer('anu')">
+      <div class="p-avatar">⭐</div>
+      <div><div class="p-name">Anu</div><div class="p-sub">Age 5 · Little Star</div></div>
+    </div>
+    <div class="p-card" onclick="selectPlayer('family')">
+      <div class="p-avatar">👨‍👩‍👧‍👦</div>
+      <div><div class="p-name">Family Mode</div><div class="p-sub">Play together!</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: Game Hub -->
+<div class="screen" id="screen-hub">
+  <div style="font-size:15px;color:#8b6914;text-align:center" id="hub-welcome">Choose a game!</div>
+  <div class="game-grid" id="game-grid"></div>
+  <button class="btn btn-warm" onclick="showScreen('screen-player')">← Change Player</button>
+</div>
+
+<!-- SCREEN: Quiz -->
+<div class="screen" id="screen-quiz">
+  <div class="game-topbar">
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="quiz-player-label">Dominion</div></div>
+    <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="quiz-score">0</div></div>
+    <div style="text-align:right"><div class="topbar-label">Question</div><div class="topbar-score" id="quiz-qnum">1/5</div></div>
+  </div>
+  <div class="quiz-box">
+    <div class="quiz-story-icon" id="quiz-icon">📖</div>
+    <div class="quiz-q" id="quiz-q">Loading...</div>
+    <div class="quiz-opts" id="quiz-opts"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="quiz-next-btn" onclick="nextQuizQ()" style="display:none">Next →</button>
+    <button class="btn btn-warm btn-sm" onclick="showHub()">📋 Games</button>
+  </div>
+</div>
+
+<!-- SCREEN: Verse Builder -->
+<div class="screen" id="screen-verse">
+  <div class="game-topbar">
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="verse-player-label">Dominion</div></div>
+    <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="verse-score">0</div></div>
+    <div style="text-align:right"><div class="topbar-label">Verse</div><div class="topbar-score" id="verse-num">1/6</div></div>
+  </div>
+  <div style="font-size:13px;color:#8b6914;text-align:center">Put the verse in the right order! 📖</div>
+  <div class="verse-display" id="verse-display"></div>
+  <div class="verse-tiles" id="verse-tiles"></div>
+  <div class="verse-ref-box" id="verse-ref-box"></div>
+  <div class="quiz-feedback" id="verse-feedback"></div>
+  <div class="action-row">
+    <button class="btn btn-warm btn-sm" onclick="clearVerseInput()">↺ Reset</button>
+    <button class="btn btn-gold btn-sm" id="verse-next-btn" onclick="nextVerse()" style="display:none">Next →</button>
+    <button class="btn btn-warm btn-sm" onclick="showHub()">📋 Games</button>
+  </div>
+</div>
+
+<!-- SCREEN: Word Search -->
+<div class="screen" id="screen-wordsearch">
+  <div class="game-topbar">
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="ws-player-label">Dominion</div></div>
+    <div style="text-align:center"><div class="topbar-label">Found</div><div class="topbar-score" id="ws-found">0/6</div></div>
+    <div style="text-align:right"><div class="topbar-label">Theme</div><div class="topbar-score" style="font-size:14px" id="ws-theme">Heroes</div></div>
+  </div>
+  <div class="ws-words" id="ws-words"></div>
+  <div class="ws-grid" id="ws-grid"></div>
+  <div class="quiz-feedback" id="ws-feedback"></div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="ws-next-btn" onclick="startWordSearch()" style="display:none">New Puzzle →</button>
+    <button class="btn btn-warm btn-sm" onclick="showHub()">📋 Games</button>
+  </div>
+</div>
+
+<!-- SCREEN: Story Adventure -->
+<div class="screen" id="screen-story">
+  <div class="game-topbar">
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="story-player-label">Dominion</div></div>
+    <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="story-score">0</div></div>
+    <div style="text-align:right"><div class="topbar-label">Story</div><div class="topbar-score" id="story-num">1/6</div></div>
+  </div>
+  <div class="story-box">
+    <div class="story-icon" id="story-icon">📖</div>
+    <div class="story-title" id="story-title">Noah's Ark</div>
+    <div class="story-text" id="story-text">Loading...</div>
+    <div class="story-choices" id="story-choices"></div>
+    <div class="story-feedback" id="story-feedback"></div>
+    <div class="story-verse" id="story-verse"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="story-next-btn" onclick="nextStory()" style="display:none">Next Story →</button>
+    <button class="btn btn-warm btn-sm" onclick="showHub()">📋 Games</button>
+  </div>
+</div>
+
+<!-- SCREEN: Character Match -->
+<div class="screen" id="screen-match">
+  <div class="game-topbar">
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="match-player-label">Dominion</div></div>
+    <div style="text-align:center"><div class="topbar-label">Pairs</div><div class="topbar-score" id="match-pairs-found">0</div></div>
+    <div style="text-align:right"><div class="topbar-label">Moves</div><div class="topbar-score" id="match-moves">0</div></div>
+  </div>
+  <div style="font-size:13px;color:#8b6914;text-align:center">Match the Bible characters! 🃏</div>
+  <div class="match-grid" id="match-grid"></div>
+  <div class="quiz-feedback" id="match-feedback"></div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="match-next-btn" onclick="startMatch()" style="display:none">Play Again →</button>
+    <button class="btn btn-warm btn-sm" onclick="showHub()">📋 Games</button>
+  </div>
+</div>
+
+<!-- SCREEN: Result -->
+<div class="screen" id="screen-result">
+  <div class="result-banner">
+    <div class="result-icon" id="result-icon">🏆</div>
+    <div class="stars-row" id="result-stars">⭐⭐⭐</div>
+    <div class="result-title" id="result-title">Well Done!</div>
+    <div class="result-sub" id="result-sub">You scored 5 out of 5!</div>
+    <div class="result-verse" id="result-verse"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold" id="result-play-again" onclick="playAgain()">▶ Play Again</button>
+    <button class="btn btn-warm" onclick="showHub()">📋 Games</button>
+    <button class="btn btn-warm" onclick="showScreen('screen-player')">🏠 Home</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const QUIZ_DATA = {
+  easy: [
+    {icon:'🚢',q:'Who built a big boat called the Ark?',opts:['Moses','Noah','David','Jesus'],ans:1,fact:'God told Noah to build the Ark to save his family and the animals!'},
+    {icon:'🦁',q:'Who was thrown into a lions\' den but was kept safe?',opts:['David','Paul','Daniel','Moses'],ans:2,fact:'God sent an angel to shut the lions\' mouths and Daniel was safe!'},
+    {icon:'🗿',q:'Who killed a giant named Goliath?',opts:['Samson','David','Joshua','Elijah'],ans:1,fact:'Young David trusted God and defeated the giant Goliath with just a sling and a stone!'},
+    {icon:'🐟',q:'Who was swallowed by a big fish?',opts:['Elijah','Paul','Jonah','Noah'],ans:2,fact:'Jonah ran from God but the big fish brought him back to do what God asked!'},
+    {icon:'🍞',q:'How many loaves did Jesus use to feed 5,000 people?',opts:['10','2','5','100'],ans:2,fact:'Jesus used just 5 loaves and 2 fish — and fed over 5,000 people with leftovers!'},
+    {icon:'👶',q:'Where was Jesus born?',opts:['Jerusalem','Nazareth','Bethlehem','Egypt'],ans:2,fact:'Jesus was born in a stable in Bethlehem!'},
+    {icon:'🌈',q:'What did God put in the sky after the flood?',opts:['A star','A rainbow','A cloud','The sun'],ans:1,fact:'God put a rainbow in the sky as a promise never to flood the whole earth again!'},
+    {icon:'👼',q:'What was the name of the angel who visited Mary?',opts:['Michael','Raphael','Gabriel','Uriel'],ans:2,fact:'The angel Gabriel told Mary she would be the mother of Jesus!'},
+    {icon:'⭐',q:'What guided the wise men to Jesus?',opts:['An angel','A rainbow','A bright star','A cloud'],ans:2,fact:'A special star appeared in the sky to guide the wise men to where Jesus was!'},
+    {icon:'🕊️',q:'What came down like a dove when Jesus was baptised?',opts:['An angel','The Holy Spirit','A cloud','A bird'],ans:1,fact:'When Jesus was baptised, the Holy Spirit came down like a dove and God said "This is my beloved Son!"'},
+    {icon:'🌊',q:'Who walked on water?',opts:['Peter alone','Moses','Jesus and Peter','Paul'],ans:2,fact:'Jesus walked on water and invited Peter to come too — Peter walked on water while he kept his eyes on Jesus!'},
+    {icon:'🏃',q:'Who ran away from God and ended up on a ship?',opts:['Moses','Elijah','Jonah','Paul'],ans:2,fact:'Jonah tried to run away from God by sailing to Tarshish, but God sent a big storm!'},
+    {icon:'🌿',q:'What did God speak to Moses from?',opts:['A cloud','A burning bush','A loud voice','A rainbow'],ans:1,fact:'God spoke to Moses from a bush that was on fire but did not burn up!'},
+    {icon:'🗺️',q:'How many days did God take to create the world?',opts:['3','5','6','7'],ans:2,fact:'God created everything in 6 days and rested on the 7th day — that day became the Sabbath!'},
+    {icon:'🍎',q:'What fruit did Adam and Eve eat that God said not to?',opts:['A banana','A grape','The forbidden fruit','An orange'],ans:2,fact:'God told Adam and Eve not to eat the fruit from the tree of knowledge of good and evil.'},
+    {icon:'🐑',q:'What job did David have before becoming king?',opts:['A fisherman','A shepherd','A carpenter','A soldier'],ans:1,fact:'David was a shepherd boy who looked after his father\'s sheep before God chose him as king!'},
+    {icon:'🏛️',q:'Who was the strongest man in the Bible?',opts:['David','Paul','Goliath','Samson'],ans:3,fact:'Samson was given amazing strength by God as long as he never cut his hair!'},
+    {icon:'🌙',q:'What did Joseph\'s brothers do with his special coat?',opts:['Lost it','Burned it','Dipped it in blood','Gave it away'],ans:2,fact:'Joseph\'s jealous brothers dipped his coat in goat\'s blood to make their father think he was dead!'},
+    {icon:'🐊',q:'Who was hidden in a basket in the river as a baby?',opts:['Joshua','Samuel','Moses','Isaac'],ans:2,fact:'Moses\' mother hid him in a basket in the Nile river to save him from Pharaoh\'s soldiers!'},
+    {icon:'🏰',q:'Whose walls fell down when people marched and blew trumpets?',opts:['Jerusalem','Jericho','Bethlehem','Egypt'],ans:1,fact:'God told Joshua to march around Jericho for 7 days — on the last day the walls came tumbling down!'},
+    {icon:'🌟',q:'What does the name Jesus mean?',opts:['King of kings','God saves','Son of David','Prince of Peace'],ans:1,fact:'The name Jesus comes from the Hebrew name Yeshua, which means "God saves"!'},
+    {icon:'🐪',q:'How many brothers did Joseph have?',opts:['10','11','12','7'],ans:1,fact:'Joseph had 11 brothers — together with Joseph they made 12 sons of Jacob, who became the 12 tribes of Israel!'},
+    {icon:'🌊',q:'What did Moses do to part the Red Sea?',opts:['Prayed loudly','Stretched out his staff','Blew a trumpet','Threw a stone'],ans:1,fact:'God told Moses to stretch out his staff over the sea — and the waters parted so Israel could walk through!'},
+    {icon:'🍇',q:'What did the 12 spies bring back from the Promised Land?',opts:['Gold and silver','Large grapes and fruit','Animals','Stones'],ans:1,fact:'The spies brought back a giant cluster of grapes so big it took two men to carry it!'},
+    {icon:'👑',q:'Who was the first king of Israel?',opts:['David','Solomon','Saul','Samuel'],ans:2,fact:'Saul was chosen as the very first king of Israel — but later King David became the most famous!'},
+    {icon:'🔥',q:'How many men were thrown into the fiery furnace?',opts:['1','2','3','4'],ans:2,fact:'Shadrach, Meshach and Abednego were thrown in — but a 4th man appeared with them and they were unharmed!'},
+    {icon:'💧',q:'What miracle did Jesus do at a wedding?',opts:['Healed the sick','Turned water into wine','Walked on water','Fed 5000'],ans:1,fact:'Jesus turned water into wine at a wedding in Cana — it was His first miracle!'},
+    {icon:'🌴',q:'What did people wave when Jesus rode into Jerusalem?',opts:['Flags','Flowers','Palm branches','Torches'],ans:2,fact:'People waved palm branches and shouted "Hosanna!" as Jesus rode in on a donkey!'},
+    {icon:'🐟',q:'What were Peter and Andrew doing when Jesus called them?',opts:['Farming','Praying','Fishing','Sleeping'],ans:2,fact:'Jesus said "Follow me and I will make you fishers of men!" — they left their nets immediately!'},
+    {icon:'🌅',q:'On what day of the week did Jesus rise from the dead?',opts:['Friday','Saturday','Sunday','Monday'],ans:2,fact:'Jesus rose on Sunday — that\'s why Christians worship on Sunday, calling it the Lord\'s Day!'},
+  ],
+  hard: [
+    {icon:'🚢',q:'How many days and nights did it rain during Noah\'s flood?',opts:['7','20','40','100'],ans:2,fact:'It rained for 40 days and 40 nights. The number 40 appears many times in the Bible!'},
+    {icon:'🦁',q:'What was Daniel\'s crime that got him thrown to the lions?',opts:['Stealing','Praying to God','Lying','Fighting'],ans:1,fact:'Daniel kept praying to God three times a day even when it was made illegal. His faith never wavered!'},
+    {icon:'🗿',q:'What tribe was King David from?',opts:['Levi','Benjamin','Judah','Dan'],ans:2,fact:'David was from the tribe of Judah — Jesus also came from this same tribe!'},
+    {icon:'🌊',q:'What sea did Moses part so Israel could escape Egypt?',opts:['Red Sea','Dead Sea','Sea of Galilee','Mediterranean'],ans:0,fact:'God parted the Red Sea for Moses and the Israelites, and the waters closed on Pharaoh\'s army!'},
+    {icon:'✝️',q:'On which day did Jesus rise from the dead?',opts:['The 1st day','The 2nd day','The 3rd day','The 7th day'],ans:2,fact:'Jesus rose on the third day — this is called the Resurrection, which Christians celebrate at Easter!'},
+    {icon:'📜',q:'What were the first five books of the Bible called?',opts:['The Psalms','The Torah / Pentateuch','The Gospels','The Prophets'],ans:1,fact:'The first five books — Genesis, Exodus, Leviticus, Numbers, Deuteronomy — are called the Torah or Pentateuch!'},
+    {icon:'🔥',q:'What was the name of the king who threw Shadrach, Meshach and Abednego into the furnace?',opts:['Darius','Herod','Nebuchadnezzar','Cyrus'],ans:2,fact:'King Nebuchadnezzar was furious when they refused to worship his golden statue — but God protected them!'},
+    {icon:'⚓',q:'How many people were on Noah\'s Ark?',opts:['2','4','8','12'],ans:2,fact:'Noah, his wife, his three sons (Shem, Ham, Japheth) and their wives — 8 people in total!'},
+    {icon:'🌿',q:'What is the shortest verse in the Bible?',opts:['"God is love"','"Amen"','"Jesus wept"','"Pray always"'],ans:2,fact:'"Jesus wept" in John 11:35 is the shortest verse — Jesus cried at the tomb of his friend Lazarus!'},
+    {icon:'🏹',q:'How many times did Joshua\'s army march around Jericho in total?',opts:['7','12','13','6'],ans:2,fact:'They marched once a day for 6 days, then 7 times on the 7th day — 13 times total — then the walls fell!'},
+    {icon:'👑',q:'Who wrote most of the Psalms?',opts:['Moses','Solomon','David','Asaph'],ans:2,fact:'King David wrote approximately 73 of the 150 Psalms — he was known as the sweet singer of Israel!'},
+    {icon:'🌊',q:'What is the name of the sea Jesus and his disciples often sailed on?',opts:['Red Sea','Dead Sea','Sea of Galilee','Sea of Tiberias'],ans:2,fact:'The Sea of Galilee (also called Sea of Tiberias) is where Jesus calmed the storm and walked on water!'},
+    {icon:'📖',q:'How many books are in the New Testament?',opts:['27','39','66','12'],ans:0,fact:'There are 27 books in the New Testament, from Matthew to Revelation!'},
+    {icon:'🐑',q:'What did the Prodigal Son do with his inheritance?',opts:['Saved it wisely','Gave it to the poor','Wasted it on wild living','Invested it'],ans:2,fact:'The Prodigal Son wasted all his money and ended up feeding pigs before coming back to his father!'},
+    {icon:'🌱',q:'In the Parable of the Sower, what does the seed represent?',opts:['Money','People','The Word of God','Faith'],ans:2,fact:'Jesus explained that the seed is the Word of God — and the different soils represent different hearts!'},
+    {icon:'🎵',q:'What instrument was King David famous for playing?',opts:['Trumpet','Harp / Lyre','Flute','Drums'],ans:1,fact:'David played the harp (lyre) so beautifully that he was called to play for King Saul to soothe his troubled spirit!'},
+    {icon:'🌍',q:'In what order did God create things on Day 1?',opts:['Sun and moon','Plants and trees','Light and darkness','Animals'],ans:2,fact:'On Day 1, God said "Let there be light" and separated light from darkness!'},
+    {icon:'👶',q:'Who dedicated the child Samuel to God at the temple?',opts:['Ruth','Deborah','Hannah','Miriam'],ans:2,fact:'Hannah prayed desperately for a child. When Samuel was born she kept her promise and brought him to serve at the temple!'},
+    {icon:'🚪',q:'At the Last Supper, what did Jesus say the bread represented?',opts:['His power','His body','His blood','His covenant'],ans:1,fact:'Jesus broke bread and said "This is my body given for you — do this in remembrance of me." — Luke 22:19'},
+    {icon:'⚡',q:'Who went to heaven in a chariot of fire without dying?',opts:['Moses','Enoch','Elijah','Elisha'],ans:2,fact:'Elijah was taken up to heaven in a whirlwind with a chariot of fire — one of only two people in the Bible who never died!'},
+    {icon:'🦅',q:'Complete this verse: "Those who hope in the Lord will renew their strength. They will soar on wings like..."',opts:['Doves','Eagles','Sparrows','Angels'],ans:1,fact:'Isaiah 40:31 — "They will soar on wings like eagles; they will run and not grow weary!"'},
+    {icon:'🏛️',q:'Who built the first temple in Jerusalem?',opts:['David','Solomon','Moses','Nehemiah'],ans:1,fact:'King Solomon built the magnificent first temple in Jerusalem — it took 7 years to complete!'},
+    {icon:'📜',q:'What were the two great commandments Jesus said all others hang on?',opts:['Pray and fast','Love God and love your neighbour','Give and serve','Worship and obey'],ans:1,fact:'Jesus said ALL the law and prophets hang on loving God with all your heart AND loving your neighbour as yourself!'},
+    {icon:'🌊',q:'How many disciples did Jesus choose?',opts:['7','10','12','15'],ans:2,fact:'Jesus chose 12 disciples — symbolising the 12 tribes of Israel — to be his closest followers!'},
+    {icon:'🔑',q:'What did Jesus give Peter that represents authority in the church?',opts:['A crown','Keys to the kingdom','A sword','A scroll'],ans:1,fact:'Jesus said "I will give you the keys of the kingdom of heaven" to Peter in Matthew 16:19!'},
+    {icon:'💡',q:'What does the word "Gospel" mean?',opts:['Holy book','Good news','God\'s word','Sacred story'],ans:1,fact:'Gospel comes from Old English "godspel" meaning "good news" — the good news of Jesus Christ!'},
+    {icon:'🌹',q:'Who was sold into slavery by his brothers but became a ruler in Egypt?',opts:['Moses','Benjamin','Joseph','Jacob'],ans:2,fact:'Joseph\'s brothers sold him for 20 pieces of silver — but God used it for good and Joseph saved Egypt from famine!'},
+    {icon:'🎯',q:'What was the name of the pool where Jesus healed a man who had been ill for 38 years?',opts:['Siloam','Bethesda','Jordan','Galilee'],ans:1,fact:'Jesus healed the man at the Pool of Bethesda — telling him "Get up! Pick up your mat and walk!"'},
+    {icon:'✨',q:'What happened to Jesus on the Mount of Transfiguration?',opts:['He was baptised','He was tempted','His face shone and clothes turned white','He ascended to heaven'],ans:2,fact:'Jesus\' face shone like the sun and Moses and Elijah appeared — God said "This is my Son — listen to him!"'},
+    {icon:'🌺',q:'What is the fruit of the Spirit listed first in Galatians 5?',opts:['Joy','Peace','Love','Kindness'],ans:2,fact:'Galatians 5:22 lists love first — "The fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faithfulness..."'},
+  ]
+};
+
+const VERSES = [
+  {words:['For','God','so','loved','the','world'],ref:'John 3:16',full:'For God so loved the world that He gave His only Son.'},
+  {words:['I','can','do','all','things','through','Christ'],ref:'Philippians 4:13',full:'I can do all things through Christ who strengthens me.'},
+  {words:['God','is','love'],ref:'1 John 4:8',full:'God is love.'},
+  {words:['Be','strong','and','courageous'],ref:'Joshua 1:9',full:'Be strong and courageous. Do not be afraid.'},
+  {words:['Trust','in','the','Lord','with','all','your','heart'],ref:'Proverbs 3:5',full:'Trust in the Lord with all your heart.'},
+  {words:['Jesus','wept'],ref:'John 11:35',full:'Jesus wept. (The shortest verse in the Bible!)'},
+  {words:['The','Lord','is','my','shepherd'],ref:'Psalm 23:1',full:'The Lord is my shepherd; I shall not want.'},
+  {words:['Love','one','another','as','I','have','loved','you'],ref:'John 15:12',full:'Love one another as I have loved you.'},
+  {words:['Your','word','is','a','lamp','to','my','feet'],ref:'Psalm 119:105',full:'Your word is a lamp to my feet and a light to my path.'},
+  {words:['With','God','all','things','are','possible'],ref:'Matthew 19:26',full:'With God all things are possible.'},
+  {words:['The','joy','of','the','Lord','is','my','strength'],ref:'Nehemiah 8:10',full:'The joy of the Lord is your strength.'},
+  {words:['Ask','and','it','will','be','given','to','you'],ref:'Matthew 7:7',full:'Ask and it will be given to you; seek and you will find.'},
+];
+
+const STORIES = [
+  {icon:'🚢',title:"Noah's Ark",
+   text:"God saw that people were doing bad things and it made Him sad. But Noah loved God and always tried to do what was right. God told Noah: 'Build a big boat called an Ark. Bring two of every animal on board.' Noah obeyed God even though it seemed strange. Then it rained for 40 days!",
+   q:"What did God tell Noah to build?",
+   choices:["A big house on a mountain","A big boat called an Ark","A tall tower to heaven","A beautiful temple"],
+   ans:1,
+   feedback:"That's right! God told Noah to build an Ark — a huge boat — to save his family and the animals from the flood.",
+   verse:'"I will establish my covenant with you." — Genesis 6:18'},
+  {icon:'🗿',title:"David & Goliath",
+   text:"The Philistines had a huge soldier named Goliath — he was over 9 feet tall! Every day he shouted: 'Send someone to fight me!' All of Israel's army was afraid. Then a young shepherd boy named David arrived. He said: 'God will help me fight this giant!' David picked up 5 smooth stones from a stream.",
+   q:"How did David defeat Goliath?",
+   choices:["With a sword and shield","With a sling and a small stone","By calling down fire","By blowing a trumpet"],
+   ans:1,
+   feedback:"David used a sling and one small stone — and trusted God completely. The stone hit Goliath and the giant fell!",
+   verse:'"The battle belongs to the Lord." — 1 Samuel 17:47'},
+  {icon:'🦁',title:"Daniel in the Lions\' Den",
+   text:"Daniel was a man who prayed to God three times every day. Some jealous men tricked the king into making a law — nobody could pray to God, only to the king! Daniel heard about the law but still opened his window and prayed. He was thrown into a den of hungry lions as punishment.",
+   q:"What happened to Daniel in the lions\' den?",
+   choices:["The lions ate him","He escaped by climbing out","God sent an angel to shut the lions\' mouths","The king rescued him at midnight"],
+   ans:2,
+   feedback:"God sent an angel to shut the lions' mouths all night! Daniel was completely safe because he trusted God.",
+   verse:'"My God sent his angel and shut the lions\' mouths." — Daniel 6:22'},
+  {icon:'👶',title:"The Birth of Jesus",
+   text:"Mary and Joseph had to travel to Bethlehem for a census. When they arrived, there was no room in any inn. Finally, they found a stable — a place where animals were kept. That night, Mary had her baby: Jesus, the Son of God! Angels appeared to shepherds in the fields nearby, saying 'Good news of great joy!'",
+   q:"Where was Jesus born?",
+   choices:["In a palace in Jerusalem","In a stable in Bethlehem","In a boat on the sea","In a tent in the desert"],
+   ans:1,
+   feedback:"Jesus was born in a humble stable in Bethlehem. Even though He is the King of kings, He came in the simplest way!",
+   verse:'"Glory to God in the highest!" — Luke 2:14'},
+  {icon:'🍞',title:"Feeding the 5,000",
+   text:"A huge crowd of over 5,000 people had followed Jesus all day to hear him teach. It was getting late and everyone was hungry. A little boy had 5 small loaves of bread and 2 fish — that's all! Jesus took the food, looked up to heaven, gave thanks to God, and began to break it and hand it out.",
+   q:"What happened when Jesus blessed the 5 loaves and 2 fish?",
+   choices:["There was just enough for 10 people","Everyone ate and there were 12 baskets left over","The food disappeared and people went home","Jesus told them to go buy more food"],
+   ans:1,
+   feedback:"Everyone ate until they were full — and there were 12 baskets of leftovers! With God, there is always more than enough!",
+   verse:'"I am the bread of life." — John 6:35'},
+  {icon:'✝️',title:"The Resurrection",
+   text:"Jesus was crucified on a cross on a day called Good Friday. His friends were very sad. They placed Jesus in a tomb and a big stone was rolled in front of it. But on the third day — Sunday morning — some women came to the tomb. The stone was rolled away! An angel said: 'He is not here — He has risen!'",
+   q:"What did the angel say when the women came to the tomb?",
+   choices:["'Come back tomorrow'","'He is not here — He has risen!'","'Jesus went to Galilee by Himself'","'The stone was blown away by wind'"],
+   ans:1,
+   feedback:"Jesus rose from the dead — this is called the Resurrection! It is the most important event in all of history. Jesus is alive!",
+   verse:'"I am the resurrection and the life." — John 11:25'},
+];
+
+const MATCH_CHARS = [
+  {icon:'⛵',name:'Noah',clue:'Built the Ark'},
+  {icon:'📜',name:'Moses',clue:'Parted the sea'},
+  {icon:'🎯',name:'David',clue:'Beat Goliath'},
+  {icon:'🦁',name:'Daniel',clue:'Lions\' Den'},
+  {icon:'🐟',name:'Jonah',clue:'Big Fish'},
+  {icon:'👑',name:'Solomon',clue:'Wisest King'},
+  {icon:'👶',name:'Jesus',clue:'Son of God'},
+  {icon:'⭐',name:'Mary',clue:'Mother of Jesus'},
+  {icon:'🌊',name:'Elijah',clue:'Parted the Jordan'},
+  {icon:'🏹',name:'Joshua',clue:'Walls of Jericho'},
+  {icon:'✂️',name:'Samson',clue:'Had great strength'},
+  {icon:'🌾',name:'Ruth',clue:'Loyal daughter-in-law'},
+];
+
+const WS_PUZZLES = [
+  {theme:'Heroes',words:['NOAH','MOSES','DAVID','ELIJAH','DANIEL','RUTH'],size:8},
+  {theme:'Miracles',words:['HEALING','WATER','BREAD','FISH','ANGEL','FIRE'],size:8},
+  {theme:'Places',words:['EDEN','SINAI','JORDAN','CANAAN','BETHLEHEM','CALVARY'],size:8},
+  {theme:'Disciples',words:['PETER','JAMES','JOHN','ANDREW','PHILIP','THOMAS'],size:8},
+  {theme:'Animals',words:['DOVE','LION','FISH','SNAKE','LAMB','RAVEN'],size:8},
+  {theme:'Kings',words:['SAUL','DAVID','SOLOMON','HEROD','CYRUS','JOSIAH'],size:8},
+  {theme:'Women',words:['MARY','RUTH','ESTHER','SARAH','HANNAH','DEBORAH'],size:8},
+  {theme:'New Testament',words:['JESUS','PAUL','PETER','GOSPEL','GRACE','FAITH'],size:8},
+  {theme:'Prophets',words:['ISAIAH','ELIJAH','JEREMIAH','DANIEL','EZEKIEL','JONAH'],size:9},
+  {theme:'The Cross',words:['CROSS','RISEN','TOMB','LOVE','SAVED','GRACE'],size:8},
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let currentPlayer = 'dominion';
+let currentGame = '';
+let quizIdx = 0, quizScore = 0, quizAnswered = false;
+let verseIdx = 0, verseScore = 0, verseInput = [];
+let wsFoundWords = [], wsSelectedCells = [], wsSelecting = false, wsPuzzleIdx = 0;
+let storyIdx = 0, storyScore = 0, storyAnswered = false;
+let matchFlipped = [], matchMatched = [], matchMoves = 0, matchPairsFound = 0, matchLock = false;
+let lastGame = '';
+
+function loadSave(player){ try{ const r=localStorage.getItem('bible_'+player); return r?JSON.parse(r):{scores:{}} }catch(e){return{scores:{}}} }
+function saveSave(player,data){ try{localStorage.setItem('bible_'+player,JSON.stringify(data))}catch(e){} }
+
+// ─────────────────────────────────────────────
+//  SCREENS & HUB
+// ─────────────────────────────────────────────
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function selectPlayer(player){
+  currentPlayer=player;
+  const names={dominion:'Dominion 🏆',anu:'Anu ⭐',family:'Family 👨‍👩‍👧‍👦'};
+  document.getElementById('hub-welcome').textContent='Choose a game, '+( player==='family'?'everyone':player==='dominion'?'Dominion':'Anu')+'!';
+  renderHub();
+  showScreen('screen-hub');
+}
+
+function showHub(){ renderHub(); showScreen('screen-hub'); }
+
+function renderHub(){
+  const save=loadSave(currentPlayer);
+  const games=[
+    {id:'quiz',icon:'🎯',title:'Bible Quiz Bowl',desc:'Answer questions about Bible stories!',score:save.scores.quiz||0},
+    {id:'verse',icon:'📖',title:'Verse Builder',desc:'Put the memory verse in order!',score:save.scores.verse||0},
+    {id:'wordsearch',icon:'🔤',title:'Word Search',desc:'Find Bible names hidden in the grid!',score:save.scores.wordsearch||0},
+    {id:'story',icon:'✝️',title:'Story Adventure',desc:'Read stories and answer questions!',score:save.scores.story||0},
+    {id:'match',icon:'🃏',title:'Character Match',desc:'Match Bible characters with their clues!',score:save.scores.match||0},
+  ];
+  const grid=document.getElementById('game-grid');
+  grid.innerHTML='';
+  games.forEach(g=>{
+    const div=document.createElement('div');
+    div.className='game-tile';
+    div.innerHTML=`<div class="gt-icon">${g.icon}</div><div><div class="gt-title">${g.title}</div><div class="gt-desc">${g.desc}</div><div class="gt-score">Best: ${g.score} pts</div></div><div style="font-size:22px;color:#555">▶</div>`;
+    div.onclick=()=>startGame(g.id);
+    grid.appendChild(div);
+  });
+}
+
+function startGame(id){
+  currentGame=id; lastGame=id;
+  const isAnu=currentPlayer==='anu';
+  if(id==='quiz') startQuiz(isAnu);
+  else if(id==='verse') startVerse(isAnu);
+  else if(id==='wordsearch') startWordSearch();
+  else if(id==='story') startStory(isAnu);
+  else if(id==='match') startMatch();
+}
+
+function playAgain(){ startGame(lastGame); }
+
+function saveScore(game, score){
+  const save=loadSave(currentPlayer);
+  if(!save.scores) save.scores={};
+  if((save.scores[game]||0)<score) save.scores[game]=score;
+  saveSave(currentPlayer,save);
+}
+
+function showResult(icon,title,sub,verse,stars,game,score){
+  document.getElementById('result-icon').textContent=icon;
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-sub').textContent=sub;
+  const sv=document.getElementById('result-verse');
+  if(verse){sv.textContent=verse;sv.style.display='block';}else{sv.style.display='none';}
+  const starsEl=document.getElementById('result-stars');
+  starsEl.textContent=stars>=3?'⭐⭐⭐':stars>=2?'⭐⭐':'⭐';
+  saveScore(game,score);
+  showScreen('screen-result');
+}
+
+// ─────────────────────────────────────────────
+//  QUIZ
+// ─────────────────────────────────────────────
+function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5); }
+let quizSet=[];
+
+function startQuiz(isAnu){
+  quizIdx=0; quizScore=0;
+  const full=isAnu?QUIZ_DATA.easy:QUIZ_DATA.hard;
+  quizSet=shuffle(full).slice(0,10);
+  document.getElementById('quiz-player-label').textContent=(function(){var p=kkGetProfile();return currentPlayer==='family'?'Family':p.name;})();
+  document.getElementById('quiz-score').textContent='0';
+  renderQuizQ(quizSet);
+  showScreen('screen-quiz');
+}
+
+function renderQuizQ(set){
+  const q=set[quizIdx];
+  quizAnswered=false;
+  document.getElementById('quiz-icon').textContent=q.icon;
+  document.getElementById('quiz-q').textContent=q.q;
+  document.getElementById('quiz-qnum').textContent=(quizIdx+1)+'/'+set.length;
+  document.getElementById('quiz-feedback').textContent='';
+  document.getElementById('quiz-feedback').className='quiz-feedback';
+  document.getElementById('quiz-next-btn').style.display='none';
+  const opts=document.getElementById('quiz-opts');
+  opts.innerHTML='';
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-opt';
+    btn.textContent=opt;
+    btn.onclick=()=>answerQuiz(i,q,set);
+    opts.appendChild(btn);
+  });
+}
+
+function answerQuiz(i,q,set){
+  if(quizAnswered) return;
+  quizAnswered=true;
+  const btns=document.querySelectorAll('.quiz-opt');
+  // disable all buttons
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const fb=document.getElementById('quiz-feedback');
+  if(i===q.ans){
+    btns[i].classList.add('correct');
+    quizScore+=10;
+    document.getElementById('quiz-score').textContent=quizScore;
+    fb.textContent='✅ '+q.fact;
+    fb.className='quiz-feedback correct';
+  } else {
+    btns[i].classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+    fb.textContent='❌ '+q.fact;
+    fb.className='quiz-feedback wrong';
+  }
+  if(quizIdx<set.length-1){
+    document.getElementById('quiz-next-btn').style.display='inline-block';
+  } else {
+    setTimeout(()=>{
+      const total=set.length*10;
+      const stars=quizScore>=total*0.8?3:quizScore>=total*0.5?2:1;
+      showResult('🎯','Quiz Complete!','You scored '+quizScore+' out of '+total+'!','"Your word is a lamp to my feet." — Psalm 119:105',stars,'quiz',quizScore);
+    },1800);
+  }
+}
+
+function nextQuizQ(){
+  quizIdx++;
+  renderQuizQ(quizSet);
+}
+
+// ─────────────────────────────────────────────
+//  VERSE BUILDER
+// ─────────────────────────────────────────────
+let verseSet=[];
+function startVerse(isAnu){
+  verseIdx=0; verseScore=0;
+  verseSet=VERSES.slice().sort(()=>Math.random()-0.5).slice(0,8);
+  document.getElementById('verse-player-label').textContent=(function(){var p=kkGetProfile();return currentPlayer==='family'?'Family':p.name;})();
+  document.getElementById('verse-score').textContent='0';
+  renderVerse(isAnu);
+  showScreen('screen-verse');
+}
+
+function renderVerse(isAnu){
+  const v=verseSet[verseIdx];
+  verseInput=[];
+  const words=isAnu&&v.words.length>4?v.words.slice(0,Math.min(4,v.words.length)):v.words;
+  document.getElementById('verse-num').textContent=(verseIdx+1)+'/'+verseSet.length;
+  document.getElementById('verse-ref-box').textContent=v.ref+' — '+v.full;
+  document.getElementById('verse-feedback').textContent='';
+  document.getElementById('verse-feedback').className='quiz-feedback';
+  document.getElementById('verse-next-btn').style.display='none';
+
+  // slots
+  const display=document.getElementById('verse-display');
+  display.innerHTML='';
+  words.forEach((_,i)=>{
+    const slot=document.createElement('div');
+    slot.className='verse-slot';
+    slot.id='slot-'+i;
+    slot.textContent='___';
+    display.appendChild(slot);
+  });
+
+  // shuffled tiles
+  const shuffled=[...words].sort(()=>Math.random()-0.5);
+  const tiles=document.getElementById('verse-tiles');
+  tiles.innerHTML='';
+  shuffled.forEach((word,i)=>{
+    const tile=document.createElement('div');
+    tile.className='verse-tile';
+    tile.id='tile-'+i;
+    tile.textContent=word;
+    tile.dataset.word=word;
+    tile.dataset.idx=i;
+    tile.onclick=()=>tapVerseTile(tile,words);
+    tiles.appendChild(tile);
+  });
+}
+
+function tapVerseTile(tile,words){
+  if(tile.classList.contains('used')) return;
+  verseInput.push(tile.dataset.word);
+  tile.classList.add('used');
+  const slotIdx=verseInput.length-1;
+  const slot=document.getElementById('slot-'+slotIdx);
+  if(slot){ slot.textContent=tile.dataset.word; slot.classList.add('filled'); }
+  if(verseInput.length===words.length) checkVerse(words);
+}
+
+function clearVerseInput(){
+  const isAnu=currentPlayer==='anu';
+  renderVerse(isAnu);
+}
+
+function checkVerse(words){
+  const correct=words.every((w,i)=>verseInput[i]===w);
+  const fb=document.getElementById('verse-feedback');
+  if(correct){
+    verseScore+=10;
+    document.getElementById('verse-score').textContent=verseScore;
+    fb.textContent='🎉 Perfect! You got it!';
+    fb.className='quiz-feedback correct';
+  } else {
+    fb.textContent='❌ Not quite! Look at the verse below and try again!';
+    fb.className='quiz-feedback wrong';
+  }
+  if(verseIdx<verseSet.length-1){
+    document.getElementById('verse-next-btn').style.display='inline-block';
+  } else {
+    setTimeout(()=>{
+      const stars=verseScore>=50?3:verseScore>=30?2:1;
+      const vtotal=verseSet.length*10; showResult('📖','Verse Builder Done!','You scored '+verseScore+' out of '+vtotal+'!','"I have hidden your word in my heart." — Psalm 119:11',stars,'verse',verseScore);
+    },1500);
+  }
+}
+
+function nextVerse(){
+  verseIdx++;
+  const isAnu=currentPlayer==='anu';
+  renderVerse(isAnu);
+}
+
+// ─────────────────────────────────────────────
+//  WORD SEARCH
+// ─────────────────────────────────────────────
+let wsGrid=[], wsSize=8, wsWords=[], wsFoundCount=0;
+
+function startWordSearch(){
+  const puzzle=WS_PUZZLES[wsPuzzleIdx%WS_PUZZLES.length];
+  wsSize=puzzle.size;
+  wsWords=currentPlayer==='anu'?puzzle.words.slice(0,4):puzzle.words;
+  wsFoundCount=0; wsSelectedCells=[]; wsFoundWords=[];
+
+  document.getElementById('ws-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('ws-theme').textContent=puzzle.theme;
+  document.getElementById('ws-found').textContent='0/'+wsWords.length;
+  document.getElementById('ws-feedback').textContent='';
+  document.getElementById('ws-next-btn').style.display='none';
+
+  // render word list
+  const ww=document.getElementById('ws-words');
+  ww.innerHTML='';
+  wsWords.forEach(w=>{
+    const span=document.createElement('span');
+    span.className='ws-word'; span.id='wsw-'+w; span.textContent=w;
+    ww.appendChild(span);
+  });
+
+  buildWSGrid();
+  renderWSGrid();
+  showScreen('screen-wordsearch');
+  wsPuzzleIdx++;
+}
+
+function buildWSGrid(){
+  wsGrid=Array.from({length:wsSize},()=>Array(wsSize).fill(''));
+  const directions=[[0,1],[1,0],[1,1],[0,-1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+
+  wsWords.forEach(word=>{
+    let placed=false, attempts=0;
+    while(!placed&&attempts<200){
+      attempts++;
+      const dir=directions[Math.floor(Math.random()*directions.length)];
+      const row=Math.floor(Math.random()*wsSize);
+      const col=Math.floor(Math.random()*wsSize);
+      const endRow=row+dir[0]*(word.length-1);
+      const endCol=col+dir[1]*(word.length-1);
+      if(endRow<0||endRow>=wsSize||endCol<0||endCol>=wsSize) continue;
+      let ok=true;
+      for(let i=0;i<word.length;i++){
+        const r=row+dir[0]*i, c=col+dir[1]*i;
+        if(wsGrid[r][c]!==''&&wsGrid[r][c]!==word[i]){ok=false;break;}
+      }
+      if(ok){
+        for(let i=0;i<word.length;i++) wsGrid[row+dir[0]*i][col+dir[1]*i]=word[i];
+        placed=true;
+      }
+    }
+  });
+
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for(let r=0;r<wsSize;r++) for(let c=0;c<wsSize;c++) if(!wsGrid[r][c]) wsGrid[r][c]=letters[Math.floor(Math.random()*letters.length)];
+}
+
+function renderWSGrid(){
+  const grid=document.getElementById('ws-grid');
+  grid.style.gridTemplateColumns=`repeat(${wsSize},34px)`;
+  grid.innerHTML='';
+  for(let r=0;r<wsSize;r++) for(let c=0;c<wsSize;c++){
+    const cell=document.createElement('div');
+    cell.className='ws-cell'; cell.dataset.r=r; cell.dataset.c=c;
+    cell.textContent=wsGrid[r][c];
+    cell.addEventListener('mousedown',wsStartSelect);
+    cell.addEventListener('touchstart',wsStartSelect,{passive:true});
+    cell.addEventListener('mouseenter',wsMoveSelect);
+    cell.addEventListener('touchmove',wsTouchMove,{passive:true});
+    cell.addEventListener('mouseup',wsEndSelect);
+    cell.addEventListener('touchend',wsEndSelect);
+    grid.appendChild(cell);
+  }
+}
+
+function getCell(r,c){ return document.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`); }
+
+function wsStartSelect(e){
+  wsSelecting=true; wsSelectedCells=[];
+  const cell=e.target.closest('.ws-cell'); if(!cell||cell.classList.contains('found')) return;
+  wsSelectedCells=[{r:+cell.dataset.r,c:+cell.dataset.c}];
+  cell.classList.add('selected');
+}
+
+function wsMoveSelect(e){
+  if(!wsSelecting) return;
+  const cell=e.target.closest('.ws-cell'); if(!cell||cell.classList.contains('found')) return;
+  const r=+cell.dataset.r, c=+cell.dataset.c;
+  if(wsSelectedCells.length>0){
+    const last=wsSelectedCells[wsSelectedCells.length-1];
+    if(last.r===r&&last.c===c) return;
+  }
+  wsSelectedCells.push({r,c});
+  document.querySelectorAll('.ws-cell.selected').forEach(cl=>cl.classList.remove('selected'));
+  wsSelectedCells.forEach(s=>{ const cl=getCell(s.r,s.c); if(cl) cl.classList.add('selected'); });
+}
+
+function wsTouchMove(e){
+  const touch=e.touches[0];
+  const el=document.elementFromPoint(touch.clientX,touch.clientY);
+  if(el) wsMoveSelect({target:el});
+}
+
+function wsEndSelect(){
+  if(!wsSelecting) return;
+  wsSelecting=false;
+  const selected=wsSelectedCells.map(s=>wsGrid[s.r][s.c]).join('');
+  const reversed=selected.split('').reverse().join('');
+  let found=null;
+  wsWords.forEach(w=>{ if((w===selected||w===reversed)&&!wsFoundWords.includes(w)) found=w; });
+  if(found){
+    wsFoundWords.push(found);
+    wsFoundCount++;
+    wsSelectedCells.forEach(s=>{ const cl=getCell(s.r,s.c); if(cl){cl.classList.remove('selected');cl.classList.add('found');} });
+    const wspan=document.getElementById('wsw-'+found);
+    if(wspan) wspan.classList.add('found-word');
+    document.getElementById('ws-found').textContent=wsFoundCount+'/'+wsWords.length;
+    document.getElementById('ws-feedback').textContent='✅ Found '+found+'!';
+    if(wsFoundCount===wsWords.length){
+      const score=wsFoundCount*10;
+      saveScore('wordsearch',score);
+      document.getElementById('ws-feedback').textContent='🎉 You found all the words!';
+      document.getElementById('ws-next-btn').style.display='inline-block';
+    }
+  } else {
+    document.querySelectorAll('.ws-cell.selected').forEach(cl=>cl.classList.remove('selected'));
+  }
+  wsSelectedCells=[];
+}
+
+// ─────────────────────────────────────────────
+//  STORY ADVENTURE
+// ─────────────────────────────────────────────
+function startStory(){
+  storyIdx=0; storyScore=0;
+  document.getElementById('story-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('story-score').textContent='0';
+  renderStory();
+  showScreen('screen-story');
+}
+
+function renderStory(){
+  storyAnswered=false;
+  const s=STORIES[storyIdx];
+  document.getElementById('story-icon').textContent=s.icon;
+  document.getElementById('story-title').textContent=s.title;
+  document.getElementById('story-text').textContent=s.text;
+  document.getElementById('story-num').textContent=(storyIdx+1)+'/'+STORIES.length;
+  document.getElementById('story-feedback').className='story-feedback';
+  document.getElementById('story-feedback').textContent='';
+  document.getElementById('story-verse').className='story-verse';
+  document.getElementById('story-next-btn').style.display='none';
+
+  const choices=document.getElementById('story-choices');
+  choices.innerHTML='';
+  s.choices.forEach((ch,i)=>{
+    const btn=document.createElement('button');
+    btn.className='story-choice'; btn.textContent=ch;
+    btn.onclick=()=>answerStory(i,s);
+    choices.appendChild(btn);
+  });
+}
+
+function answerStory(i,s){
+  if(storyAnswered) return;
+  storyAnswered=true;
+  const btns=document.querySelectorAll('.story-choice');
+  const fb=document.getElementById('story-feedback');
+  const verse=document.getElementById('story-verse');
+  if(i===s.ans){
+    btns[i].classList.add('correct');
+    storyScore+=10;
+    document.getElementById('story-score').textContent=storyScore;
+    fb.textContent='✅ '+s.feedback;
+  } else {
+    btns[i].classList.add('wrong');
+    btns[s.ans].classList.add('correct');
+    fb.textContent='❌ '+s.feedback;
+  }
+  fb.className='story-feedback show';
+  verse.textContent=s.verse;
+  verse.className='story-verse show';
+  if(storyIdx<STORIES.length-1) document.getElementById('story-next-btn').style.display='inline-block';
+  else setTimeout(()=>{
+    const stars=storyScore>=50?3:storyScore>=30?2:1;
+    showResult('✝️','Story Complete!','You scored '+storyScore+' out of 60!',STORIES[Math.floor(Math.random()*STORIES.length)].verse,stars,'story',storyScore);
+  },1800);
+}
+
+function nextStory(){
+  storyIdx++;
+  renderStory();
+}
+
+// ─────────────────────────────────────────────
+//  CHARACTER MATCH
+// ─────────────────────────────────────────────
+function startMatch(){
+  matchFlipped=[]; matchMatched=[]; matchMoves=0; matchPairsFound=0; matchLock=false;
+  const isAnu=currentPlayer==='anu';
+  const count=isAnu?6:12;
+  const chars=MATCH_CHARS.slice(0,count);
+
+  document.getElementById('match-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('match-pairs-found').textContent='0';
+  document.getElementById('match-moves').textContent='0';
+  document.getElementById('match-feedback').textContent='';
+  document.getElementById('match-next-btn').style.display='none';
+
+  // create pairs: icon card + name card
+  let cards=[];
+  chars.forEach((ch,i)=>{
+    cards.push({pairId:i,type:'icon',icon:ch.icon,name:ch.name,clue:ch.clue});
+    cards.push({pairId:i,type:'name',icon:ch.icon,name:ch.name,clue:ch.clue});
+  });
+  cards.sort(()=>Math.random()-0.5);
+
+  const cols=isAnu?3:4;
+  const grid=document.getElementById('match-grid');
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML='';
+  cards.forEach((card,idx)=>{
+    const div=document.createElement('div');
+    div.className='match-card';
+    div.dataset.idx=idx;
+    div.dataset.pairId=card.pairId;
+    div.dataset.type=card.type;
+    div.innerHTML=`<div class="mc-back">✝️</div><div class="mc-front"><div class="mc-icon">${card.icon}</div><div class="mc-name">${card.type==='icon'?card.clue:card.name}</div></div>`;
+    div.onclick=()=>flipMatchCard(div,cards);
+    grid.appendChild(div);
+  });
+  showScreen('screen-match');
+}
+
+function flipMatchCard(div,cards){
+  if(matchLock||div.classList.contains('flipped')||div.classList.contains('matched')) return;
+  div.classList.add('flipped');
+  matchFlipped.push(div);
+  if(matchFlipped.length===2){
+    matchLock=true; matchMoves++;
+    document.getElementById('match-moves').textContent=matchMoves;
+    const [a,b]=matchFlipped;
+    if(a.dataset.pairId===b.dataset.pairId){
+      a.classList.add('matched'); b.classList.add('matched');
+      matchPairsFound++;
+      document.getElementById('match-pairs-found').textContent=matchPairsFound;
+      document.getElementById('match-feedback').textContent='✅ Matched '+cards[+a.dataset.idx]?.name+'!';
+      matchFlipped=[]; matchLock=false;
+      const isAnu=currentPlayer==='anu';
+      if(matchPairsFound===(isAnu?6:12)){
+        const score=Math.max(10,100-matchMoves*2);
+        saveScore('match',score);
+        document.getElementById('match-next-btn').style.display='inline-block';
+        document.getElementById('match-feedback').textContent='🎉 You matched them all!';
+      }
+    } else {
+      document.getElementById('match-feedback').textContent='❌ Not a match — try again!';
+      setTimeout(()=>{
+        a.classList.remove('flipped'); b.classList.remove('flipped');
+        matchFlipped=[]; matchLock=false;
+        document.getElementById('match-feedback').textContent='';
+      },900);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+//  WORSHIP MUSIC — Web Audio API
+//  Gentle, warm, praise kids feel
+// ─────────────────────────────────────────────
+let audioCtx=null,musicPlaying=false,musicNodes=[],musicScheduler=null,nextNoteTime=0,noteIndex=0;
+
+// Gentle diatonic melody in C major — hymn-like, warm feel
+const MELODY=[
+  523.25,587.33,659.25,698.46,659.25,587.33,523.25,0,
+  392.00,440.00,523.25,587.33,523.25,440.00,392.00,0,
+  349.23,392.00,440.00,523.25,587.33,523.25,440.00,392.00,
+  523.25,659.25,783.99,698.46,659.25,587.33,523.25,0
+];
+const HARM=[
+  329.63,349.23,392.00,440.00,392.00,349.23,329.63,0,
+  261.63,293.66,329.63,349.23,329.63,293.66,261.63,0,
+  220.00,246.94,261.63,329.63,349.23,329.63,293.66,261.63,
+  261.63,329.63,392.00,440.00,392.00,349.23,329.63,0
+];
+const NOTE_DUR=0.28;
+const LOOK_AHEAD=0.35;
+
+function initAudio(){ if(audioCtx) return; audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
+
+function playTone(freq,start,dur,gain,type){
+  if(!freq||!audioCtx) return;
+  const osc=audioCtx.createOscillator();
+  const gn=audioCtx.createGain();
+  const master=audioCtx.createGain();
+  osc.type=type||'sine';
+  osc.frequency.setValueAtTime(freq,start);
+  gn.gain.setValueAtTime(0,start);
+  gn.gain.linearRampToValueAtTime(gain,start+0.04);
+  gn.gain.setValueAtTime(gain,start+dur*0.7);
+  gn.gain.linearRampToValueAtTime(0,start+dur);
+  master.gain.value=0.14;
+  osc.connect(gn);gn.connect(master);master.connect(audioCtx.destination);
+  osc.start(start);osc.stop(start+dur+0.05);
+  musicNodes.push(osc);
+}
+
+function scheduleNotes(){
+  while(nextNoteTime<audioCtx.currentTime+LOOK_AHEAD){
+    const idx=noteIndex%MELODY.length;
+    playTone(MELODY[idx],nextNoteTime,NOTE_DUR*0.85,0.55,'sine');
+    playTone(HARM[idx],nextNoteTime,NOTE_DUR*1.0,0.25,'triangle');
+    nextNoteTime+=NOTE_DUR; noteIndex++;
+  }
+}
+
+function startMusic(){
+  initAudio();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  nextNoteTime=audioCtx.currentTime+0.05; noteIndex=0; musicPlaying=true;
+  musicScheduler=setInterval(scheduleNotes,50);
+  document.getElementById('music-btn').textContent='🎵';
+  document.getElementById('music-btn').classList.add('playing');
+}
+
+function stopMusic(){
+  musicPlaying=false;
+  if(musicScheduler){clearInterval(musicScheduler);musicScheduler=null;}
+  musicNodes.forEach(n=>{try{n.stop()}catch(e){}});
+  musicNodes=[];
+  document.getElementById('music-btn').textContent='🔇';
+  document.getElementById('music-btn').classList.remove('playing');
+}
+
+function toggleMusic(){ musicPlaying?stopMusic():startMusic(); }
+function autoStart(){ if(!musicPlaying) startMusic(); }
+document.addEventListener('touchstart',autoStart,{once:true});
+document.addEventListener('click',autoStart,{once:true});
+</script>
+</body>
+</html>
