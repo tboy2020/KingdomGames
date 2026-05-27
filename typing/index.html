@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Frog Typer 🐸</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;background:#87CEEB;display:flex;flex-direction:column;align-items:center}
+
+/* ── NAV ── */
+.nav-bar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,0,0,0.15);backdrop-filter:blur(4px)}
+.nav-btn{background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif}
+.nav-btn:active{transform:scale(.95)}
+
+/* ── SCREENS ── */
+.screen{width:100%;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding:70px 16px 40px;position:relative;z-index:10}
+.screen.active{display:flex}
+
+/* ── POND BACKGROUND ── */
+.pond-bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;overflow:hidden;pointer-events:none}
+.sky{position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,#87CEEB 0%,#B0E2FF 100%)}
+.sun{position:absolute;top:18px;right:40px;width:60px;height:60px;background:radial-gradient(circle,#FFE066 60%,#FFD700 100%);border-radius:50%;box-shadow:0 0 30px #FFE066,0 0 60px #FFD70055;animation:sunPulse 3s ease-in-out infinite}
+@keyframes sunPulse{0%,100%{box-shadow:0 0 30px #FFE066,0 0 60px #FFD70055}50%{box-shadow:0 0 50px #FFE066,0 0 90px #FFD70088}}
+.cloud{position:absolute;background:#fff;border-radius:50px;opacity:.85}
+.cloud1{width:80px;height:28px;top:30px;left:30px;animation:cloudDrift 18s linear infinite}
+.cloud2{width:60px;height:22px;top:50px;left:180px;animation:cloudDrift 24s linear infinite}
+.cloud3{width:100px;height:32px;top:20px;right:120px;animation:cloudDrift 20s linear infinite reverse}
+@keyframes cloudDrift{0%{transform:translateX(0)}50%{transform:translateX(20px)}100%{transform:translateX(0)}}
+.water{position:absolute;bottom:0;left:0;right:0;height:44%;background:linear-gradient(180deg,#4FC3F7 0%,#0288D1 100%);overflow:hidden}
+.water-ripple{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,0.3);animation:ripple 3s ease-out infinite;opacity:0}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(4);opacity:0}}
+.grass{position:absolute;bottom:44%;left:0;right:0;height:8%;background:linear-gradient(180deg,#66BB6A 0%,#388E3C 100%)}
+.reed{position:absolute;bottom:44%;width:6px;border-radius:3px;background:#558B2F;transform-origin:bottom center}
+.reed::after{content:'';position:absolute;top:-14px;left:-4px;width:14px;height:22px;background:#8BC34A;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%}
+
+/* ── LILY PADS (game) ── */
+.lily-pad{position:absolute;display:flex;flex-direction:column;align-items:center;animation:floatDown linear forwards}
+@keyframes floatDown{from{transform:translateY(-60px)}to{transform:translateY(110vh)}}
+.pad-svg{width:80px;height:40px}
+.pad-word{font-family:'Fredoka One',cursive;font-size:15px;color:#1a3a00;background:rgba(255,255,255,0.85);border-radius:8px;padding:3px 10px;margin-top:-8px;white-space:nowrap;border:2px solid #66BB6A;letter-spacing:1px}
+.pad-word.active-pad{border-color:#FF6B00;color:#FF6B00;background:#fff7f0;box-shadow:0 0 10px #FF6B0055}
+
+/* ── SNAKE (mode 2) ── */
+.snake-enemy{position:absolute;display:flex;align-items:center;gap:6px}
+.snake-body{font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.snake-word{font-family:'Fredoka One',cursive;font-size:14px;color:#fff;background:#c62828;border-radius:8px;padding:3px 10px;border:2px solid #ff5252;white-space:nowrap}
+.snake-word.active-snake{border-color:#FFD700;background:#e65100;box-shadow:0 0 10px #FFD70066}
+
+/* ── FROG CHARACTER ── */
+.frog-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+.frog-svg-wrap{position:relative;width:90px;height:90px;cursor:default}
+.frog-svg-wrap.jumping{animation:frogJump .5s ease}
+@keyframes frogJump{0%{transform:translateY(0) scaleX(1)}30%{transform:translateY(-40px) scaleX(.9)}70%{transform:translateY(-60px) scaleX(.9)}100%{transform:translateY(0) scaleX(1)}}
+.frog-svg-wrap.wiggle{animation:frogWiggle .4s ease}
+@keyframes frogWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.frog-svg-wrap.sad{animation:frogSad .4s ease}
+@keyframes frogSad{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+.tongue{position:absolute;top:38px;left:50%;transform:translateX(-50%);width:8px;height:0;background:#ff6b9d;border-radius:4px;transform-origin:top center;transition:height .15s ease}
+.tongue.shoot{height:45px}
+.frog-name-tag{font-family:'Fredoka One',cursive;font-size:13px;color:#fff;background:rgba(0,0,0,.3);border-radius:12px;padding:2px 10px;margin-top:4px;white-space:nowrap}
+.frog-stage-tag{font-size:11px;color:#FFE066;font-weight:800;margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:1px;padding:13px 30px;border:none;border-radius:50px;cursor:pointer;transition:transform .1s,box-shadow .1s;box-shadow:0 4px 15px rgba(0,0,0,.25);user-select:none}
+.btn:active{transform:scale(.96)}
+.btn-green{background:linear-gradient(135deg,#66BB6A,#2E7D32);color:#fff}
+.btn-orange{background:linear-gradient(135deg,#FF8F00,#FF6B00);color:#fff}
+.btn-white{background:#fff;color:#2E7D32;border:2px solid #66BB6A}
+.btn-red{background:linear-gradient(135deg,#ef5350,#b71c1c);color:#fff}
+.btn-sm{font-size:14px;padding:9px 20px}
+.btn-xs{font-size:13px;padding:7px 16px}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:20px;padding:24px 20px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.3);border:3px solid #66BB6A}
+.card-title{font-family:'Fredoka One',cursive;font-size:24px;color:#2E7D32;margin-bottom:6px;text-align:center}
+.card-sub{font-size:13px;color:#666;text-align:center;margin-bottom:16px}
+
+/* ── ONBOARDING ── */
+.ob-step{display:none;flex-direction:column;align-items:center;gap:14px;width:100%}
+.ob-step.active{display:flex}
+.ob-question{font-family:'Fredoka One',cursive;font-size:22px;color:#2E7D32;text-align:center}
+.ob-input{width:100%;background:#f9fff9;border:3px solid #66BB6A;border-radius:14px;padding:14px 18px;font-family:'Fredoka One',cursive;font-size:22px;color:#1a3a00;outline:none;text-align:center;letter-spacing:2px}
+.ob-input:focus{border-color:#FF8F00}
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%}
+.color-swatch{width:100%;aspect-ratio:1;border-radius:14px;cursor:pointer;border:4px solid transparent;transition:border-color .15s,transform .1s;display:flex;align-items:center;justify-content:center;font-size:24px}
+.color-swatch:active{transform:scale(.93)}
+.color-swatch.selected{border-color:#FFD700;box-shadow:0 0 0 3px #FFD700}
+
+/* ── HOME SCREEN ── */
+.home-frog-area{display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0}
+.evo-bar-wrap{width:100%;max-width:280px}
+.evo-label{font-size:12px;color:#fff;font-weight:800;text-align:center;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.evo-track{background:rgba(0,0,0,.2);border-radius:20px;height:12px;overflow:hidden}
+.evo-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#FFE066,#FFD700);transition:width .5s ease}
+.evo-pips{display:flex;justify-content:space-between;margin-top:4px}
+.evo-pip{font-size:16px}
+.wins-badge{font-family:'Fredoka One',cursive;font-size:13px;color:#FFE066;text-shadow:0 1px 3px rgba(0,0,0,.4);text-align:center}
+
+.mode-grid{width:100%;max-width:400px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode-tile{background:rgba(255,255,255,.88);border-radius:16px;padding:14px 10px;cursor:pointer;text-align:center;border:3px solid transparent;transition:border-color .15s,transform .1s;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.mode-tile:active{transform:scale(.96)}
+.mode-tile.locked{opacity:.45;cursor:not-allowed}
+.mode-tile-icon{font-size:30px;margin-bottom:4px}
+.mode-tile-name{font-family:'Fredoka One',cursive;font-size:14px;color:#2E7D32}
+.mode-tile-best{font-size:11px;color:#888;margin-top:2px}
+.mode-tile:not(.locked):hover{border-color:#66BB6A}
+
+/* ── GAME HUD ── */
+.hud{position:fixed;top:56px;left:0;right:0;z-index:150;display:flex;justify-content:space-between;align-items:center;padding:6px 14px;background:rgba(0,0,0,.2);backdrop-filter:blur(4px)}
+.hud-stat{text-align:center}
+.hud-label{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px}
+.hud-val{font-family:'Fredoka One',cursive;font-size:20px;color:#fff;line-height:1}
+.lives-row{display:flex;gap:2px;font-size:16px}
+.timer-urgent{color:#ff5252;animation:timerPulse .5s ease infinite}
+@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+/* ── GAME AREA ── */
+.game-area{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;overflow:hidden;pointer-events:none}
+.game-area *{pointer-events:auto}
+
+/* ── FROG STAGE (bottom) ── */
+.frog-stage{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;align-items:center}
+
+/* ── TYPE INPUT ── */
+.type-bar{position:fixed;bottom:0;left:0;right:0;z-index:180;background:rgba(255,255,255,.95);border-top:3px solid #66BB6A;padding:10px 14px 20px;display:flex;gap:10px;align-items:center}
+.type-field{flex:1;background:#f9fff9;border:3px solid #66BB6A;border-radius:14px;padding:12px 16px;font-family:'Fredoka One',cursive;font-size:22px;color:#1a3a00;outline:none;letter-spacing:2px;text-transform:uppercase}
+.type-field:focus{border-color:#FF8F00}
+.type-submit{font-family:'Fredoka One',cursive;font-size:18px;padding:12px 20px;background:linear-gradient(135deg,#66BB6A,#2E7D32);color:#fff;border:none;border-radius:14px;cursor:pointer}
+
+/* ── SCORE POPUPS ── */
+.score-pop{position:fixed;font-family:'Fredoka One',cursive;font-size:22px;color:#FFD700;text-shadow:0 2px 6px rgba(0,0,0,.4);pointer-events:none;z-index:300;animation:scorePop .8s ease forwards}
+@keyframes scorePop{0%{transform:translateY(0) scale(.8);opacity:1}100%{transform:translateY(-60px) scale(1.2);opacity:0}}
+.splat{position:fixed;font-size:32px;pointer-events:none;z-index:300;animation:splatAnim .5s ease forwards}
+@keyframes splatAnim{0%{transform:scale(0) rotate(0);opacity:1}60%{transform:scale(1.4) rotate(20deg);opacity:1}100%{transform:scale(2) rotate(40deg);opacity:0}}
+
+/* ── AUDIO INDICATOR ── */
+.audio-pill{position:fixed;bottom:110px;right:14px;z-index:190;background:#4CAF50;color:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:800;display:none}
+.audio-pill.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── RESULT SCREEN ── */
+.result-card{background:rgba(255,255,255,.95);border-radius:24px;padding:24px 20px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.result-icon-big{font-size:64px;animation:resultPop .6s ease}
+@keyframes resultPop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.result-title{font-family:'Fredoka One',cursive;font-size:30px;color:#2E7D32;margin:8px 0}
+.result-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.result-stat-box{background:#f9fff9;border-radius:12px;padding:10px 6px;border:2px solid #66BB6A}
+.result-stat-val{font-family:'Fredoka One',cursive;font-size:22px;color:#FF8F00}
+.result-stat-label{font-size:10px;color:#888;text-transform:uppercase}
+.result-verse{background:#fff8e1;border-left:4px solid #FFD700;border-radius:0 12px 12px 0;padding:10px 14px;font-size:13px;color:#5d4037;font-style:italic;margin-top:10px;text-align:left}
+.evo-unlock{background:#fff3e0;border:2px solid #FFD700;border-radius:12px;padding:10px;margin-top:10px;font-family:'Fredoka One',cursive;font-size:15px;color:#E65100;display:none}
+.evo-unlock.show{display:block;animation:resultPop .5s ease}
+.stars-big{font-size:32px;letter-spacing:8px;margin:6px 0}
+
+/* ── RACE MODE ── */
+.race-player-box{background:rgba(255,255,255,.9);border-radius:16px;padding:12px 16px;width:100%;max-width:380px;border:3px solid transparent}
+.race-player-box.active-racer{border-color:#FF8F00}
+.race-word{font-family:'Fredoka One',cursive;font-size:28px;color:#1a3a00;text-align:center;letter-spacing:3px;margin:8px 0}
+.race-timer{font-family:'Fredoka One',cursive;font-size:48px;color:#FF6B00;text-align:center}
+
+/* ── ACCURACY MODE ── */
+.acc-word-big{font-family:'Fredoka One',cursive;font-size:42px;color:#1a3a00;text-align:center;letter-spacing:4px;padding:20px;background:rgba(255,255,255,.9);border-radius:20px;width:100%;max-width:380px;border:4px solid #66BB6A}
+.acc-streak{font-family:'Fredoka One',cursive;font-size:18px;color:#FF8F00;text-align:center}
+.acc-lives{display:flex;gap:6px;justify-content:center;font-size:24px}
+.letter-tile{display:inline-block;width:36px;height:44px;background:#fff;border:3px solid #66BB6A;border-radius:8px;text-align:center;line-height:44px;font-family:'Fredoka One',cursive;font-size:20px;color:#1a3a00;margin:2px;transition:background .15s,color .15s}
+.letter-tile.correct-l{background:#4CAF50;color:#fff;border-color:#2E7D32}
+.letter-tile.wrong-l{background:#ef5350;color:#fff;border-color:#b71c1c;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── FIREFLY MODE ── */
+.firefly{position:absolute;width:16px;height:16px;border-radius:50%;background:#FFE066;box-shadow:0 0 10px #FFD700,0 0 20px #FFE066;animation:fireflyGlow 1s ease-in-out infinite alternate}
+@keyframes fireflyGlow{0%{opacity:.3;transform:scale(.8)}100%{opacity:1;transform:scale(1.2)}}
+.firefly-letter{position:absolute;font-family:'Fredoka One',cursive;font-size:22px;color:#FFE066;text-shadow:0 0 10px #FFD700;animation:fireflyFloat 2s ease-in-out infinite alternate}
+@keyframes fireflyFloat{0%{transform:translateY(0)}100%{transform:translateY(-12px)}}
+.ff-blank-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+
+/* ── RHYTHM MODE ── */
+.rhythm-word{font-family:'Fredoka One',cursive;font-size:32px;color:#fff;text-align:center;background:rgba(0,0,0,.3);border-radius:16px;padding:14px 24px;border:3px solid rgba(255,255,255,.4);transition:transform .1s,border-color .1s}
+.rhythm-word.beat-flash{transform:scale(1.08);border-color:#FFD700;box-shadow:0 0 20px #FFD70066}
+.beat-indicator{display:flex;gap:8px;justify-content:center}
+.beat-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .1s,transform .1s}
+.beat-dot.on{background:#FFD700;transform:scale(1.3);box-shadow:0 0 8px #FFD700}
+.rhythm-combo{font-family:'Fredoka One',cursive;font-size:16px;color:#FFE066;text-align:center}
+
+/* UTILITY */
+.action-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.spacer{height:200px}
+</style>
+</head>
+<body>
+
+<!-- POND BACKGROUND -->
+<div class="pond-bg" id="pond-bg">
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+  <div class="water">
+    <div class="water-ripple" style="width:80px;height:80px;left:20%;top:30%;animation-delay:0s"></div>
+    <div class="water-ripple" style="width:60px;height:60px;left:60%;top:50%;animation-delay:1.2s"></div>
+    <div class="water-ripple" style="width:100px;height:100px;left:40%;top:20%;animation-delay:2.4s"></div>
+  </div>
+  <div class="grass"></div>
+  <div class="reed" style="left:8%;height:60px;bottom:46%"></div>
+  <div class="reed" style="left:12%;height:45px;bottom:46%"></div>
+  <div class="reed" style="right:10%;height:55px;bottom:46%"></div>
+  <div class="reed" style="right:15%;height:40px;bottom:46%"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar" id="nav-bar" style="display:none">
+  <a class="nav-btn" href="../index.html">👑 Hub</a>
+  <span id="nav-title" style="font-family:'Fredoka One',cursive;color:#fff;font-size:16px">🐸 Frog Typer</span>
+  <button class="nav-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
+</div>
+
+<!-- AUDIO PILL -->
+<div class="audio-pill" id="audio-pill">🔊 Word!</div>
+
+<!-- GAME AREA (for lily pads / snakes) -->
+<div class="game-area" id="game-area"></div>
+
+<!-- FROG STAGE -->
+<div class="frog-stage" id="frog-stage" style="display:none">
+  <div class="frog-svg-wrap" id="frog-wrap">
+    <svg id="frog-svg" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" width="90" height="90">
+      <!-- Body -->
+      <ellipse id="frog-body" cx="45" cy="58" rx="30" ry="22" fill="#4CAF50"/>
+      <!-- Back legs -->
+      <ellipse cx="20" cy="72" rx="14" ry="7" fill="#388E3C" transform="rotate(-20,20,72)"/>
+      <ellipse cx="70" cy="72" rx="14" ry="7" fill="#388E3C" transform="rotate(20,70,72)"/>
+      <!-- Belly -->
+      <ellipse cx="45" cy="62" rx="18" ry="13" fill="#A5D6A7"/>
+      <!-- Eyes base -->
+      <circle cx="32" cy="40" r="11" fill="#4CAF50" id="eye-l-base"/>
+      <circle cx="58" cy="40" r="11" fill="#4CAF50" id="eye-r-base"/>
+      <!-- Eyes white -->
+      <circle cx="32" cy="40" r="8" fill="#fff"/>
+      <circle cx="58" cy="40" r="8" fill="#fff"/>
+      <!-- Pupils -->
+      <circle cx="33" cy="40" r="4" fill="#1a1a1a" id="pupil-l"/>
+      <circle cx="59" cy="40" r="4" fill="#1a1a1a" id="pupil-r"/>
+      <!-- Eye shine -->
+      <circle cx="35" cy="38" r="1.5" fill="#fff"/>
+      <circle cx="61" cy="38" r="1.5" fill="#fff"/>
+      <!-- Mouth -->
+      <path id="frog-mouth" d="M36 68 Q45 75 54 68" stroke="#2E7D32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Nostrils -->
+      <circle cx="41" cy="52" r="2" fill="#388E3C"/>
+      <circle cx="49" cy="52" r="2" fill="#388E3C"/>
+      <!-- Crown (hidden by default) -->
+      <g id="frog-crown" display="none">
+        <polygon points="45,18 38,30 45,26 52,30" fill="#FFD700" stroke="#FF8F00" stroke-width="1"/>
+        <circle cx="45" cy="19" r="3" fill="#FF6B00"/>
+        <circle cx="38" cy="30" r="2" fill="#FF6B00"/>
+        <circle cx="52" cy="30" r="2" fill="#FF6B00"/>
+      </g>
+      <!-- Golden glow (hidden by default) -->
+      <ellipse id="frog-glow" cx="45" cy="55" rx="34" ry="26" fill="none" stroke="#FFD700" stroke-width="3" opacity="0"/>
+    </svg>
+    <div class="tongue" id="frog-tongue"></div>
+  </div>
+  <div class="frog-name-tag" id="frog-name-tag">🐸 Froggy</div>
+  <div class="frog-stage-tag" id="frog-stage-tag">🥚 Egg</div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: ONBOARDING
+════════════════════════════════════ -->
+<div class="screen active" id="screen-onboard" style="justify-content:center;z-index:50;position:relative">
+  <div class="card" style="max-width:340px">
+    <div id="ob1" class="ob-step active">
+      <div style="font-size:56px;text-align:center">🐸</div>
+      <div class="ob-question">Welcome to Frog Typer!</div>
+      <div style="font-size:14px;color:#888;text-align:center">What is your name?</div>
+      <input class="ob-input" id="ob-player-name" maxlength="12" placeholder="Your name..." autocomplete="off"/>
+      <button class="btn btn-green" onclick="obNext(1)">Next →</button>
+    </div>
+    <div id="ob2" class="ob-step">
+      <div style="font-size:48px;text-align:center">🐸✏️</div>
+      <div class="ob-question">Name your frog!</div>
+      <div style="font-size:14px;color:#888;text-align:center">What will you call your frog?</div>
+      <input class="ob-input" id="ob-frog-name" maxlength="12" placeholder="Frog name..." autocomplete="off"/>
+      <button class="btn btn-green" onclick="obNext(2)">Next →</button>
+    </div>
+    <div id="ob3" class="ob-step">
+      <div class="ob-question">Pick your frog's colour!</div>
+      <div class="color-grid" id="color-grid"></div>
+      <button class="btn btn-green" onclick="obNext(3)">Meet my frog! 🐸</button>
+    </div>
+    <div id="ob4" class="ob-step">
+      <div style="font-size:56px;text-align:center" id="ob-frog-preview">🐸</div>
+      <div class="ob-question" id="ob-meet-msg">Meet Froggy!</div>
+      <div style="font-size:14px;color:#555;text-align:center">Your frog starts as an 🥚 Egg. Win 5 games to evolve!</div>
+      <button class="btn btn-green" onclick="finishOnboard()">Let's Play! 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HOME
+════════════════════════════════════ -->
+<div class="screen" id="screen-home" style="position:relative;z-index:10">
+  <div class="home-frog-area">
+    <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3)" id="home-greeting">Hi Dominion!</div>
+    <div class="evo-bar-wrap">
+      <div class="evo-label" id="evo-label">🥚 Egg · 0 / 5 wins to evolve</div>
+      <div class="evo-track"><div class="evo-fill" id="evo-fill" style="width:0%"></div></div>
+      <div class="evo-pips"><span class="evo-pip">🥚</span><span class="evo-pip">🐛</span><span class="evo-pip">🐸</span><span class="evo-pip">👑</span><span class="evo-pip">✨</span></div>
+    </div>
+    <div class="wins-badge" id="wins-badge">Total wins: 0</div>
+  </div>
+  <div style="font-family:'Fredoka One',cursive;font-size:16px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.3);margin-bottom:6px">Choose a mode!</div>
+  <div class="mode-grid" id="mode-grid"></div>
+  <div class="action-row" style="margin-top:16px">
+    <button class="btn btn-white btn-sm" onclick="resetProfile()">⚙️ Reset Profile</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: QUICK PLAY (Lily Pad)
+════════════════════════════════════ -->
+<div class="screen" id="screen-qp">
+  <div id="win-target-pill" style="position:fixed;top:100px;left:50%;transform:translateX(-50%);z-index:160;background:rgba(255,255,255,0.85);border-radius:20px;padding:4px 16px;font-family:'Fredoka One',cursive;font-size:13px;color:#2E7D32;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15)">🎯 Eat words to win!</div>
+  <div class="spacer"></div>
+  <div class="type-bar" id="type-bar-qp">
+    <input class="type-field" id="qp-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="TYPE..."/>
+    <button class="type-submit" onclick="submitQP()">→</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: SNAKE MODE
+════════════════════════════════════ -->
+<div class="screen" id="screen-snake">
+  <div class="spacer"></div>
+  <div class="type-bar" id="type-bar-snake">
+    <input class="type-field" id="snake-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="ZAP IT..."/>
+    <button class="type-submit" onclick="submitSnake()">→</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: RACE MODE
+════════════════════════════════════ -->
+<div class="screen" id="screen-race" style="gap:14px;padding-top:80px">
+  <div class="race-player-box active-racer" id="race-box">
+    <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#888;text-align:center" id="race-whose-turn">Dominion's turn!</div>
+    <div class="race-word" id="race-word-display">WORD</div>
+    <div id="race-letter-row" style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
+  <div class="race-timer" id="race-timer">0.0s</div>
+  <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#fff;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.3)" id="race-status">Get ready...</div>
+  <div style="background:rgba(255,255,255,.85);border-radius:14px;padding:10px 16px;width:100%;max-width:380px" id="race-scores-box">
+    <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#666;text-align:center;margin-bottom:6px">SCORES</div>
+    <div style="display:flex;justify-content:space-around" id="race-scores"></div>
+  </div>
+  <div class="type-bar" id="type-bar-race" style="position:fixed;bottom:0">
+    <input class="type-field" id="race-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="TYPE..."/>
+    <button class="type-submit" onclick="submitRace()">→</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: ACCURACY MODE
+════════════════════════════════════ -->
+<div class="screen" id="screen-acc" style="gap:14px;padding-top:90px">
+  <div class="acc-word-big" id="acc-word-display">
+    <div id="acc-letter-row" style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap"></div>
+  </div>
+  <div class="acc-streak" id="acc-streak">🔥 Streak: 0</div>
+  <div class="acc-lives" id="acc-lives">❤️❤️❤️❤️❤️</div>
+  <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);text-align:center">Type perfectly — one wrong letter = frog slips! 🐸</div>
+  <div class="type-bar" style="position:fixed;bottom:0">
+    <input class="type-field" id="acc-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="TYPE PERFECTLY..."/>
+    <button class="type-submit" onclick="submitAcc()">→</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: RESULT
+════════════════════════════════════ -->
+<div class="screen" id="screen-result" style="justify-content:center;padding-top:80px">
+  <div class="result-card">
+    <div class="result-icon-big" id="res-icon">🏆</div>
+    <div class="stars-big" id="res-stars">⭐⭐⭐</div>
+    <div class="result-title" id="res-title">Amazing!</div>
+    <div class="result-stats-grid" id="res-stats"></div>
+    <div class="result-verse" id="res-verse"></div>
+    <div class="evo-unlock" id="evo-unlock">🎉 Your frog evolved!</div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-green" id="res-again-btn" onclick="playAgain()">▶ Play Again</button>
+    <button class="btn btn-white btn-sm" onclick="goHome()">🏠 Home</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════
+const COLORS = [
+  {name:'Green',  val:'#4CAF50', dark:'#2E7D32'},
+  {name:'Blue',   val:'#2196F3', dark:'#1565C0'},
+  {name:'Purple', val:'#9C27B0', dark:'#6A1B9A'},
+  {name:'Red',    val:'#F44336', dark:'#B71C1C'},
+  {name:'Orange', val:'#FF9800', dark:'#E65100'},
+  {name:'Pink',   val:'#E91E63', dark:'#880E4F'},
+  {name:'Yellow', val:'#FFC107', dark:'#FF6F00'},
+  {name:'Teal',   val:'#009688', dark:'#004D40'},
+];
+
+const EVO_STAGES = [
+  {name:'Egg',          icon:'🥚', wins:0},
+  {name:'Tadpole',      icon:'🐛', wins:3},
+  {name:'Frog',         icon:'🐸', wins:6},
+  {name:'Crowned Frog', icon:'👑', wins:9},
+  {name:'Golden Frog',  icon:'✨', wins:12},
+];
+
+const MODES = [
+  {id:'lilypad',   icon:'🌿', name:'Lily Pad Catch',    desc:'Type words on floating pads!',     minWins:0},
+  {id:'snake',     icon:'🐍', name:'Frog vs Snake',      desc:'Zap snakes before they reach you!',minWins:1},
+  {id:'race',      icon:'🏆', name:'Typing Race',        desc:'Pass & race — who\'s faster?',     minWins:2},
+  {id:'accuracy',  icon:'🎯', name:'Accuracy Challenge', desc:'Type perfectly — no mistakes!',    minWins:3},
+  {id:'firefly',   icon:'🌙', name:'Firefly Spelling',   desc:'Remember flashing letters!',       minWins:4},
+  {id:'story',     icon:'📖', name:'Bible Story',        desc:'Type to reveal the story!',        minWins:5},
+  {id:'rhythm',    icon:'🎵', name:'Rhythm Typer',       desc:'Type on the beat for bonus!',      minWins:6},
+];
+
+const WORDS = {
+  set1: ['GOD','JOY','SON','WAY','YES','NEW','WIN','DAY',
+         'LOVE','PRAY','HOLY','HOPE','LIFE','FREE','KING',
+         'LAMB','DOVE','RISE','BORN','GIFT','HEAL','SING',
+         'REST','SAFE','PURE','KIND','BOLD','CALM','REAL','TRUE'],
+  set2: ['GRACE','PEACE','TRUST','LIGHT','TRUTH','RISEN','SAVED',
+         'MERCY','POWER','ABIDE','BLESS','CROWN','GLORY','BREAD',
+         'CROSS','ALIVE','STAND','CLEAN','GUARD','FAITH','STILL',
+         'CHOSEN','WORTHY','TENDER','SHIELD','REFUGE','WONDER'],
+  set3: ['PRAISE','HUMBLE','JOYFUL','VESSEL','RESCUE','BANNER',
+         'FAVOUR','MENDED','HERALD','RADIANT','DEVOTED','PERFECT',
+         'HOPEFUL','FEARLESS','BELOVED','BLESSED','ETERNAL','RENEWED',
+         'VICTORS','PROSPER'],
+  set4: ['ANOINTED','REDEEMED','FORGIVEN','RESTORED','OVERCOMER',
+         'COVENANT','SANCTIFY','GLORIOUS','FAITHFUL','RIGHTEOUS',
+         'GRACIOUS','MERCIFUL','POWERFUL','PRECIOUS','WONDERFUL'],
+};
+
+function getWordPool(){
+  const wins = profile.totalWins||0;
+  let pool = [...WORDS.set1];
+  if(wins>=3)  pool = [...pool, ...WORDS.set2];
+  if(wins>=6) pool = [...pool, ...WORDS.set3];
+  if(wins>=9) pool = [...pool, ...WORDS.set4];
+  return pool;
+}
+
+const VERSES = [
+  '"I can do all things through Christ who strengthens me." — Philippians 4:13',
+  '"For God so loved the world that He gave His only Son." — John 3:16',
+  '"Be strong and courageous. Do not be afraid." — Joshua 1:9',
+  '"The joy of the Lord is your strength." — Nehemiah 8:10',
+  '"Trust in the Lord with all your heart." — Proverbs 3:5',
+  '"With God all things are possible." — Matthew 19:26',
+  '"Your word is a lamp to my feet." — Psalm 119:105',
+  '"God is love." — 1 John 4:8',
+];
+
+// ═══════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════
+let profile = null;
+
+function loadProfile(){
+  try{ const r=localStorage.getItem('frogtyper_profile'); return r?JSON.parse(r):null; }catch(e){return null;}
+}
+function saveProfile(){
+  try{ localStorage.setItem('frogtyper_profile', JSON.stringify(profile)); }catch(e){}
+}
+
+function getEvoStage(){
+  const wins = profile.totalWins||0;
+  let stage=0;
+  EVO_STAGES.forEach((e,i)=>{ if(wins>=e.wins) stage=i; });
+  return stage;
+}
+
+
+
+function getWinTarget(){
+  // Anu (age 5) = 10 words, Dominion (age 7) = 14 words
+  // Detect by name — fallback to 10
+  const name = (profile.playerName||'').toLowerCase();
+  if(name === 'dominion') return 14;
+  if(name === 'anu') return 10;
+  // Default: use isEasy flag
+  return profile.isEasy ? 10 : 14;
+}
+
+function randWord(){
+  const pool=getWordPool();
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function shuffle(arr){ return arr.slice().sort(()=>Math.random()-.5); }
+
+// ═══════════════════════════════════════
+//  ONBOARDING
+// ═══════════════════════════════════════
+let obColor = COLORS[0];
+
+function buildColorGrid(){
+  const grid=document.getElementById('color-grid');
+  grid.innerHTML='';
+  COLORS.forEach((c,i)=>{
+    const div=document.createElement('div');
+    div.className='color-swatch'+(i===0?' selected':'');
+    div.style.background=c.val;
+    div.innerHTML=i===0?'✓':'';
+    div.onclick=()=>{
+      obColor=c;
+      document.querySelectorAll('.color-swatch').forEach(s=>{s.classList.remove('selected');s.innerHTML='';});
+      div.classList.add('selected');
+      div.innerHTML='✓';
+    };
+    grid.appendChild(div);
+  });
+}
+
+function obNext(step){
+  if(step===1){
+    const name=document.getElementById('ob-player-name').value.trim();
+    if(!name){ alert('Please enter your name!'); return; }
+    document.getElementById('ob1').classList.remove('active');
+    document.getElementById('ob2').classList.add('active');
+  } else if(step===2){
+    const fname=document.getElementById('ob-frog-name').value.trim();
+    if(!fname){ alert('Please name your frog!'); return; }
+    buildColorGrid();
+    document.getElementById('ob2').classList.remove('active');
+    document.getElementById('ob3').classList.add('active');
+  } else if(step===3){
+    const pname=document.getElementById('ob-player-name').value.trim();
+    const fname=document.getElementById('ob-frog-name').value.trim();
+    document.getElementById('ob-meet-msg').textContent='Meet '+fname+'! 🐸';
+    document.getElementById('ob-frog-preview').textContent=obColor.val==='#FFC107'?'🟡':'🐸';
+    document.getElementById('ob3').classList.remove('active');
+    document.getElementById('ob4').classList.add('active');
+    if(window.speechSynthesis) speak('Hello! I am '+fname+'. Let\'s play!');
+  }
+}
+
+function finishOnboard(){
+  const pname=document.getElementById('ob-player-name').value.trim();
+  const fname=document.getElementById('ob-frog-name').value.trim();
+  profile={
+    playerName: pname,
+    frogName: fname,
+    frogColor: obColor.val,
+    frogColorDark: obColor.dark,
+    isEasy: pname.toLowerCase()==='anu',
+    totalWins: 0,
+    modeWins: {},
+    modeScores: {},
+  };
+  saveProfile();
+  initApp();
+}
+
+function resetProfile(){
+  if(confirm('Reset your profile? This clears all progress!')){
+    localStorage.removeItem('frogtyper_profile');
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════
+function initApp(){
+  document.getElementById('nav-bar').style.display='flex';
+  applyFrogColor();
+  updateEvoDisplay();
+  buildModeGrid();
+  showScreen('screen-home');
+  document.getElementById('home-greeting').textContent='Hi '+profile.playerName+'! 👋';
+  if(profile.isEasy) speak('Hi '+profile.playerName+'! Let\'s play Frog Typer!');
+}
+
+function applyFrogColor(){
+  const c=profile.frogColor;
+  const d=profile.frogColorDark;
+  const svg=document.getElementById('frog-svg');
+  if(!svg) return;
+  svg.querySelectorAll('#frog-body,#eye-l-base,#eye-r-base').forEach(el=>el.setAttribute('fill',c));
+  svg.querySelectorAll('[fill="#388E3C"]').forEach(el=>el.setAttribute('fill',d));
+  document.getElementById('frog-name-tag').textContent='🐸 '+profile.frogName;
+  updateEvoVisuals();
+}
+
+function updateEvoVisuals(){
+  const stage=getEvoStage();
+  const evo=EVO_STAGES[stage];
+  document.getElementById('frog-stage-tag').textContent=evo.icon+' '+evo.name;
+  const crown=document.getElementById('frog-crown');
+  const glow=document.getElementById('frog-glow');
+  crown.setAttribute('display', stage>=3?'block':'none');
+  glow.setAttribute('opacity', stage>=4?'0.6':'0');
+}
+
+function updateEvoDisplay(){
+  const wins=profile.totalWins||0;
+  const stage=getEvoStage();
+  const evo=EVO_STAGES[stage];
+  const nextEvo=EVO_STAGES[stage+1];
+  const toward=nextEvo?wins-evo.wins:evo.wins;
+  const needed=nextEvo?nextEvo.wins-evo.wins:5;
+  const pct=Math.min(100,(toward/needed)*100);
+  document.getElementById('evo-label').textContent=evo.icon+' '+evo.name+(nextEvo?' · '+toward+' / '+needed+' wins to evolve':' · MAX LEVEL ✨');
+  document.getElementById('evo-fill').style.width=pct+'%';
+  document.getElementById('wins-badge').textContent='Total wins: '+wins;
+  updateEvoVisuals();
+}
+
+function buildModeGrid(){
+  const grid=document.getElementById('mode-grid');
+  grid.innerHTML='';
+  const wins=profile.totalWins||0;
+  MODES.forEach(m=>{
+    const locked=wins<m.minWins;
+    const best=profile.modeScores&&profile.modeScores[m.id]?'Best: '+profile.modeScores[m.id]:'Not played';
+    const div=document.createElement('div');
+    div.className='mode-tile'+(locked?' locked':'');
+    div.innerHTML=`<div class="mode-tile-icon">${m.icon}</div>
+      <div class="mode-tile-name">${m.name}</div>
+      <div class="mode-tile-best">${locked?'🔒 Win '+m.minWins+' total':best}</div>`;
+    if(!locked) div.onclick=()=>startMode(m.id);
+    grid.appendChild(div);
+  });
+}
+
+function goHome(){
+  stopAllGames();
+  document.getElementById('frog-stage').style.display='none';
+  document.getElementById('game-area').innerHTML='';
+  document.getElementById('hud') && (document.getElementById('hud').style.display='none');
+  updateEvoDisplay();
+  buildModeGrid();
+  showScreen('screen-home');
+}
+
+// ═══════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════
+function showHUD(score,lives,maxLives,timer,extra){
+  let hud=document.getElementById('hud');
+  if(!hud){hud=document.createElement('div');hud.id='hud';hud.className='hud';document.body.appendChild(hud);}
+  let hearts='';
+  for(let i=0;i<maxLives;i++) hearts+=(i<lives?'❤️':'🖤');
+  const timerClass=timer<=10?'hud-val timer-urgent':'hud-val';
+  hud.innerHTML=`
+    <div class="hud-stat"><div class="hud-label">Score</div><div class="hud-val">${score}</div></div>
+    <div class="hud-stat"><div class="hud-label">Lives</div><div class="lives-row">${hearts}</div></div>
+    <div class="hud-stat"><div class="hud-label">Time</div><div class="${timerClass}">${timer}s</div></div>
+    <div class="hud-stat"><div class="hud-label">${extra.label||'WPM'}</div><div class="hud-val">${extra.val||0}</div></div>`;
+  hud.style.display='flex';
+}
+function hideHUD(){ const h=document.getElementById('hud'); if(h) h.style.display='none'; }
+
+// ═══════════════════════════════════════
+//  FROG ANIMATIONS
+// ═══════════════════════════════════════
+function frogJump(cb){
+  const w=document.getElementById('frog-wrap');
+  w.classList.remove('jumping','wiggle','sad');
+  void w.offsetWidth;
+  w.classList.add('jumping');
+  shootTongue();
+  setTimeout(()=>{ w.classList.remove('jumping'); if(cb) cb(); },500);
+}
+function frogWiggle(){
+  const w=document.getElementById('frog-wrap');
+  w.classList.remove('jumping','wiggle','sad');
+  void w.offsetWidth;
+  w.classList.add('wiggle');
+  setTimeout(()=>w.classList.remove('wiggle'),400);
+}
+function frogSad(){
+  const w=document.getElementById('frog-wrap');
+  w.classList.remove('jumping','wiggle','sad');
+  void w.offsetWidth;
+  w.classList.add('sad');
+  setTimeout(()=>w.classList.remove('sad'),400);
+}
+function shootTongue(){
+  const t=document.getElementById('frog-tongue');
+  t.classList.add('shoot');
+  setTimeout(()=>t.classList.remove('shoot'),300);
+}
+
+function showFrogStage(){ document.getElementById('frog-stage').style.display='flex'; }
+function hideFrogStage(){ document.getElementById('frog-stage').style.display='none'; }
+
+// ═══════════════════════════════════════
+//  SCORE POP + SPLAT
+// ═══════════════════════════════════════
+const ENCOURAGE = [
+  "You've got this! 💪",
+  "Keep typing! 🐸",
+  "So close! Try again!",
+  "You can do it! ⭐",
+  "Don't give up! 🙏",
+  "Jesus loves you! ❤️",
+  "Stay strong! 🦁",
+];
+let encourageIdx=0;
+function showEncouragement(){
+  const msg=ENCOURAGE[encourageIdx%ENCOURAGE.length];
+  encourageIdx++;
+  const div=document.createElement('div');
+  div.style.cssText='position:fixed;bottom:160px;left:50%;transform:translateX(-50%);font-family:"Fredoka One",cursive;font-size:18px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);pointer-events:none;z-index:300;animation:scorePop .9s ease forwards;white-space:nowrap;';
+  div.textContent=msg;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),900);
+}
+
+function showScorePop(pts, x, y){
+  const div=document.createElement('div');
+  div.className='score-pop';
+  div.textContent='+'+pts;
+  div.style.left=(x||window.innerWidth/2-20)+'px';
+  div.style.top=(y||window.innerHeight/2)+'px';
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),800);
+}
+function showSplat(x,y){
+  const div=document.createElement('div');
+  div.className='splat';
+  div.textContent=['💥','✨','🌟','💫'][Math.floor(Math.random()*4)];
+  div.style.left=(x||window.innerWidth/2)+'px';
+  div.style.top=(y||window.innerHeight/2)+'px';
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),500);
+}
+
+// ═══════════════════════════════════════
+//  MODE ROUTER
+// ═══════════════════════════════════════
+let currentMode='';
+function startMode(id){
+  currentMode=id;
+  stopAllGames();
+  showFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  if(id==='lilypad') startLilyPad();
+  else if(id==='snake') startSnake();
+  else if(id==='race') startRace();
+  else if(id==='accuracy') startAccuracy();
+  else if(id==='firefly') startFirefly();
+  else if(id==='story') startStoryMode();
+  else if(id==='rhythm') startRhythm();
+}
+function stopAllGames(){
+  clearInterval(timerInt);clearInterval(spawnInt);clearInterval(fallInt);
+  clearInterval(snakeInt);clearInterval(snakeFallInt);
+  clearInterval(raceTimerInt);clearInterval(rhythmInt);clearInterval(rhythmBeatInt);
+  timerInt=spawnInt=fallInt=snakeInt=snakeFallInt=raceTimerInt=rhythmInt=rhythmBeatInt=null;
+  document.getElementById('game-area').innerHTML='';
+  hideHUD();
+}
+function playAgain(){ startMode(currentMode); }
+
+// ═══════════════════════════════════════
+//  RESULT SCREEN
+// ═══════════════════════════════════════
+function showResult(icon,title,score,wordsTyped,accuracy,isWin){
+  stopAllGames();
+  hideFrogStage();
+  document.getElementById('game-area').innerHTML='';
+
+  if(isWin){
+    profile.totalWins=(profile.totalWins||0)+1;
+    if(!profile.modeWins) profile.modeWins={};
+    profile.modeWins[currentMode]=(profile.modeWins[currentMode]||0)+1;
+    if(!profile.modeScores) profile.modeScores={};
+    if(score>(profile.modeScores[currentMode]||0)) profile.modeScores[currentMode]=score;
+    const prevEvo=getEvoStage();
+    saveProfile();
+    const newEvo=getEvoStage();
+    const evolved=newEvo>prevEvo;
+    document.getElementById('evo-unlock').className='evo-unlock'+(evolved?' show':'');
+    if(evolved){
+      document.getElementById('evo-unlock').textContent='🎉 '+profile.frogName+' evolved to '+EVO_STAGES[newEvo].icon+' '+EVO_STAGES[newEvo].name+'!';
+      if(profile.isEasy) speak('Amazing! Your frog evolved! You are a champion!');
+    }
+  } else {
+    document.getElementById('evo-unlock').className='evo-unlock';
+  }
+
+  const stars=score>=150?3:score>=80?2:1;
+  document.getElementById('res-icon').textContent=icon;
+  document.getElementById('res-stars').textContent=stars===3?'⭐⭐⭐':stars===2?'⭐⭐':'⭐';
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-stats').innerHTML=
+    `<div class="result-stat-box"><div class="result-stat-val">${score}</div><div class="result-stat-label">Score</div></div>
+     <div class="result-stat-box"><div class="result-stat-val">${wordsTyped}</div><div class="result-stat-label">Words</div></div>
+     <div class="result-stat-box"><div class="result-stat-val">${accuracy}%</div><div class="result-stat-label">Accuracy</div></div>`;
+  const wins=profile.totalWins||0;
+  let unlockHint='';
+  if(wins===2)  unlockHint=' 🌿 1 more win unlocks new words!';
+  else if(wins===5)  unlockHint=' 🌸 1 more win unlocks more words!';
+  else if(wins===8) unlockHint=' 👑 1 more win unlocks Crown words!';
+  else if(wins===3||wins===6||wins===9) unlockHint=' 🎉 New word set just unlocked!';
+  const verse=VERSES[Math.floor(Math.random()*VERSES.length)];
+  document.getElementById('res-verse').textContent=verse+(unlockHint?'\n\n'+unlockHint:'');
+  showScreen('screen-result');
+  playSound('complete');
+}
+
+// ═══════════════════════════════════════
+//  MODE 1 — LILY PAD CATCH
+// ═══════════════════════════════════════
+let lpPads=[],lpScore=0,lpLives=3,lpTimer=60,lpCorrect=0,lpTotal=0,lpPadId=0;
+let timerInt=null,spawnInt=null,fallInt=null;
+
+function startLilyPad(){
+  lpPads=[];lpScore=0;lpLives=5;lpTimer=90;lpCorrect=0;lpTotal=0;lpPadId=0;
+  document.getElementById('game-area').innerHTML='';
+  document.getElementById('qp-input').value='';
+  showScreen('screen-qp');
+  showFrogStage();
+  const winTarget=getWinTarget();
+  document.getElementById('win-target-pill') && (document.getElementById('win-target-pill').textContent='🎯 Eat '+winTarget+' words to win!');
+  showHUD(0,5,5,90,{label:'/ '+winTarget,val:0});
+
+  if(profile.isEasy) speak('Type the words on the lily pads before they fall!');
+
+  // First pad after short delay so screen is ready
+  setTimeout(()=>{
+    spawnPad();
+    spawnInt=setInterval(()=>spawnPad(), profile.isEasy?7000:5500);
+    fallInt=setInterval(updatePads,80);
+  }, 800);
+
+  timerInt=setInterval(()=>{
+    lpTimer--;
+    showHUD(lpScore,lpLives,5,lpTimer,{label:'/ '+getWinTarget(),val:lpCorrect});
+    if(lpTimer<=0) endLilyPad('time');
+    setTimeout(()=>document.getElementById('qp-input').focus(),100);
+  },1000);
+}
+
+function spawnPad(){
+  const word=randWord();
+  const id=lpPadId++;
+  const area=document.getElementById('game-area');
+  const screenW=window.innerWidth||360;
+  const x=20+Math.floor(Math.random()*Math.max(60,screenW-140));
+  const duration=profile.isEasy?28:22;
+  const isFirst=lpPads.filter(p=>!p.done).length===0;
+
+  const div=document.createElement('div');
+  div.className='lily-pad';
+  div.id='pad-'+id;
+  div.dataset.word=word;
+  div.style.cssText='position:absolute;left:'+x+'px;top:-80px;display:flex;flex-direction:column;align-items:center;z-index:110;animation:none;';
+
+  div.innerHTML='<svg width="80" height="40" viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">'
+    +'<ellipse cx="40" cy="22" rx="36" ry="18" fill="#4CAF50" opacity=".95"/>'
+    +'<ellipse cx="40" cy="22" rx="28" ry="13" fill="#66BB6A" opacity=".7"/>'
+    +'<line x1="40" y1="8" x2="40" y2="36" stroke="#2E7D32" stroke-width="1.5" opacity=".6"/>'
+    +'<line x1="10" y1="22" x2="70" y2="22" stroke="#2E7D32" stroke-width="1.5" opacity=".6"/>'
+    +'</svg>'
+    +'<div class="pad-word'+(isFirst?' active-pad':'')+'" id="padword-'+id+'" style="margin-top:-6px">'+word+'</div>';
+
+  area.appendChild(div);
+
+  const padObj={id,word,el:div,wordEl:document.getElementById('padword-'+id),startTime:Date.now(),duration:duration*1000,done:false};
+  lpPads.push(padObj);
+  lpTotal++;
+
+  if(profile.isEasy){ speak(word.toLowerCase()); showAudioPill(); }
+  if(isFirst) updateActiveHighlight();
+}
+
+function updatePads(){
+  const areaH=window.innerHeight;
+  const now=Date.now();
+  let missedOne=false;
+  lpPads=lpPads.filter(p=>{
+    if(p.done) return false;
+    const elapsed=now-p.startTime;
+    const pct=Math.min(1,elapsed/p.duration);
+    const y=-80+pct*(areaH+20);
+    p.el.style.top=y+'px';
+    // missed — reached frog zone (bottom 160px)
+    if(y>=areaH-160){
+      p.done=true;
+      try{p.el.remove();}catch(e){}
+      frogSad(); playSound('wrong');
+      lpLives--;
+      showHUD(lpScore,lpLives,5,lpTimer,{label:'Words',val:lpCorrect});
+      if(lpLives<=0){endLilyPad('lives');return false;}
+      missedOne=true;
+      return false;
+    }
+    return true;
+  });
+  if(missedOne) updateActiveHighlight();
+}
+
+function updateActiveHighlight(){
+  document.querySelectorAll('.pad-word').forEach(el=>el.classList.remove('active-pad'));
+  if(lpPads.length>0){
+    const first=lpPads.find(p=>!p.done);
+    if(first) first.wordEl.classList.add('active-pad');
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const qpInput=document.getElementById('qp-input');
+  qpInput.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();submitQP();} });
+  qpInput.addEventListener('input',()=>{
+    const val=qpInput.value.toUpperCase().trim();
+    const active=lpPads.find(p=>!p.done);
+    if(active&&val===active.word) submitQP();
+  });
+
+  const snakeInput=document.getElementById('snake-input');
+  snakeInput.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();submitSnake();} });
+  snakeInput.addEventListener('input',()=>{
+    const val=snakeInput.value.toUpperCase().trim();
+    const active=snakes.find(s=>!s.done);
+    if(active&&val===active.word) submitSnake();
+  });
+
+  const raceInput=document.getElementById('race-input');
+  raceInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();submitRace();} });
+  raceInput.addEventListener('input',()=>{
+    const val=raceInput.value.toUpperCase().trim();
+    if(val===raceCurrentWord) submitRace();
+  });
+
+  const accInput=document.getElementById('acc-input');
+  accInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();submitAcc();} });
+  accInput.addEventListener('input',handleAccInput);
+});
+
+function submitQP(){
+  const inp=document.getElementById('qp-input');
+  const val=inp.value.toUpperCase().trim();
+  if(!val) return;
+  const active=lpPads.find(p=>!p.done);
+  if(!active){inp.value='';return;}
+  if(val===active.word){
+    lpCorrect++;lpScore+=active.word.length*10;
+    active.done=true;
+    showSplat(active.el.offsetLeft+40,active.el.offsetTop);
+    showScorePop(active.word.length*10, active.el.offsetLeft+40, active.el.offsetTop);
+    active.el.remove();
+    lpPads=lpPads.filter(p=>p.id!==active.id);
+    frogJump();playSound('correct');
+    if(profile.isEasy) speak('Well done!');
+    const wt=getWinTarget();
+    showHUD(lpScore,lpLives,5,lpTimer,{label:'/ '+wt,val:lpCorrect});
+    // Celebrate hitting target mid-game
+    if(lpCorrect===wt){
+      showScorePop('🏆 '+wt+'!', window.innerWidth/2-30, window.innerHeight/2);
+      if(profile.isEasy) speak('You did it! Amazing!');
+    }
+    updateActiveHighlight();
+    if(lpPads.length>0&&profile.isEasy){ const next=lpPads.find(p=>!p.done); if(next) speak(next.word.toLowerCase()); }
+  } else { playSound('wrong'); frogSad(); }
+  inp.value='';
+}
+
+function endLilyPad(reason){
+  stopAllGames();
+  document.getElementById('game-area').innerHTML='';
+  const acc=lpTotal>0?Math.round((lpCorrect/lpTotal)*100):0;
+  const isWin=reason==='time'&&lpScore>=50;
+  showResult(isWin?'🏆':'🐸', isWin?profile.frogName+' wins!':'Time\'s up!', lpScore, lpCorrect, acc, isWin);
+}
+
+// ═══════════════════════════════════════
+//  MODE 2 — FROG VS SNAKE
+// ═══════════════════════════════════════
+let snakes=[],snakeScore=0,snakeLives=3,snakeTimer=90,snakeCorrect=0,snakeTotal=0,snakeId=0;
+let snakeInt=null,snakeFallInt=null;
+
+function startSnake(){
+  snakes=[];snakeScore=0;snakeLives=5;snakeTimer=90;snakeCorrect=0;snakeTotal=0;snakeId=0;
+  document.getElementById('snake-input').value='';
+  showScreen('screen-snake');
+  showHUD(0,5,5,90,{label:'Zapped',val:0});
+  setTimeout(()=>document.getElementById('snake-input').focus(),400);
+  if(profile.isEasy) speak('Type the word on the snake to zap it before it reaches you!');
+  spawnSnake();
+  snakeInt=setInterval(()=>spawnSnake(), profile.isEasy?8000:6000);
+  snakeFallInt=setInterval(updateSnakes,80);
+  timerInt=setInterval(()=>{
+    snakeTimer--;
+    showHUD(snakeScore,snakeLives,5,snakeTimer,{label:'Zapped',val:snakeCorrect});
+    if(snakeTimer<=0) endSnake('time');
+  },1000);
+}
+
+function spawnSnake(){
+  if(!document.getElementById('screen-snake').classList.contains('active')) return;
+  const word=randWord();
+  const id=snakeId++;
+  const fromLeft=Math.random()<.5;
+  const y=Math.floor(window.innerHeight*.25+Math.random()*window.innerHeight*.35);
+  const speed=profile.isEasy?0.4:0.8;
+
+  const div=document.createElement('div');
+  div.className='snake-enemy';
+  div.id='snake-'+id;
+  div.dataset.word=word;
+  div.dataset.fromLeft=fromLeft?'1':'0';
+  div.dataset.speed=speed;
+  div.style.cssText='position:absolute;top:'+y+'px;left:'+( fromLeft?'-120px':(window.innerWidth+20)+'px')+';display:flex;align-items:center;gap:6px;z-index:110;';
+
+  div.innerHTML=`<div class="snake-body">${fromLeft?'🐍':'🐍'}</div>
+    <div class="snake-word active-snake" id="snword-${id}">${word}</div>`;
+  document.getElementById('game-area').appendChild(div);
+
+  snakes.push({id,word,el:div,x:fromLeft?-120:window.innerWidth+20,fromLeft,speed,done:false,y});
+  snakeTotal++;
+  if(profile.isEasy){ speak(word.toLowerCase()); showAudioPill(); }
+}
+
+function updateSnakes(){
+  const cx=window.innerWidth/2;
+  snakes=snakes.filter(s=>{
+    if(s.done) return false;
+    s.x+=s.fromLeft?s.speed:-s.speed;
+    s.el.style.left=s.x+'px';
+    const reached=s.fromLeft?s.x>=cx-60:s.x<=cx+60;
+    if(reached){
+      s.done=true;s.el.remove();
+      frogSad();playSound('wrong');
+      snakeLives--;
+      showHUD(snakeScore,snakeLives,5,snakeTimer,{label:'Zapped',val:snakeCorrect});
+      if(snakeLives<=0){endSnake('lives');return false;}
+      return false;
+    }
+    return true;
+  });
+}
+
+function submitSnake(){
+  const inp=document.getElementById('snake-input');
+  const val=inp.value.toUpperCase().trim();
+  if(!val) return;
+  const hit=snakes.find(s=>!s.done&&s.word===val);
+  if(hit){
+    snakeCorrect++;snakeScore+=hit.word.length*12;
+    hit.done=true;
+    showSplat(hit.x,hit.y);
+    showScorePop(hit.word.length*12,hit.x,hit.y);
+    hit.el.remove();
+    snakes=snakes.filter(s=>s.id!==hit.id);
+    frogJump();playSound('correct');
+    if(profile.isEasy) speak('Great shot!');
+    showHUD(snakeScore,snakeLives,5,snakeTimer,{label:'Zapped',val:snakeCorrect});
+  } else { playSound('wrong'); frogSad(); }
+  inp.value='';
+}
+
+function endSnake(reason){
+  stopAllGames();
+  document.getElementById('game-area').innerHTML='';
+  const acc=snakeTotal>0?Math.round((snakeCorrect/snakeTotal)*100):0;
+  const isWin = reason==='time';
+  const title = isWin
+    ? 'Snakes defeated! '+snakeCorrect+' zapped! 🐍💥'
+    : 'Keep going — you are getting stronger! 💪';
+  showResult(isWin?'🏆':'🐍', title, snakeScore, snakeCorrect, acc, isWin);
+}
+
+// ═══════════════════════════════════════
+//  MODE 3 — TYPING RACE
+// ═══════════════════════════════════════
+let raceWords=[],raceCurrentWord='',raceWordIdx=0;
+let racePlayer1Time=null,racePlayer2Time=null,raceCurrentPlayer=1;
+let raceStart=0,raceTimerInt=null,raceScore1=0,raceScore2=0;
+let raceTotalWords=10;
+
+function startRace(){
+  raceWords=shuffle(getWordPool()).slice(0,raceTotalWords);
+  raceWordIdx=0;raceCurrentPlayer=1;racePlayer1Time=null;racePlayer2Time=null;
+  raceScore1=0;raceScore2=0;
+  document.getElementById('race-input').value='';
+  showScreen('screen-race');
+  hideFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  hideHUD();
+  loadRaceWord();
+  if(profile.isEasy) speak('Racing time! Type the word as fast as you can!');
+}
+
+function loadRaceWord(){
+  raceCurrentWord=raceWords[raceWordIdx]||'';
+  document.getElementById('race-word-display').textContent=raceCurrentWord;
+  renderLetterRow('race-letter-row',raceCurrentWord,'');
+  document.getElementById('race-whose-turn').textContent=
+    raceCurrentPlayer===1?(profile.playerName+'\'s turn! 🏁'):'Player 2\'s turn! 🏁';
+  document.getElementById('race-status').textContent='Type the word!';
+  document.getElementById('race-timer').textContent='0.0s';
+  document.getElementById('race-input').value='';
+  raceStart=Date.now();
+  clearInterval(raceTimerInt);
+  raceTimerInt=setInterval(()=>{
+    const elapsed=((Date.now()-raceStart)/1000).toFixed(1);
+    document.getElementById('race-timer').textContent=elapsed+'s';
+  },100);
+  setTimeout(()=>document.getElementById('race-input').focus(),300);
+  updateRaceScores();
+}
+
+function submitRace(){
+  const inp=document.getElementById('race-input');
+  const val=inp.value.toUpperCase().trim();
+  if(val!==raceCurrentWord){playSound('wrong');frogSad();return;}
+  clearInterval(raceTimerInt);
+  const elapsed=(Date.now()-raceStart)/1000;
+  playSound('correct');frogWiggle();
+  const pts=Math.max(10,Math.round(100-elapsed*10));
+  if(raceCurrentPlayer===1){
+    racePlayer1Time=elapsed;raceScore1+=pts;
+    document.getElementById('race-status').textContent='Got it in '+elapsed.toFixed(1)+'s! Now Player 2!';
+    raceCurrentPlayer=2;
+    inp.value='';
+    setTimeout(()=>loadRaceWord(),1200);
+  } else {
+    racePlayer2Time=elapsed;raceScore2+=pts;
+    raceWordIdx++;
+    if(raceWordIdx>=raceTotalWords){ endRace(); return; }
+    raceCurrentPlayer=1;
+    inp.value='';
+    setTimeout(()=>loadRaceWord(),1200);
+  }
+}
+
+function updateRaceScores(){
+  document.getElementById('race-scores').innerHTML=
+    `<div style="text-align:center"><div style="font-family:'Fredoka One',cursive;font-size:11px;color:#888">${profile.playerName}</div>
+     <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#2E7D32">${raceScore1}</div></div>
+     <div style="text-align:center;font-size:20px;color:#888">VS</div>
+     <div style="text-align:center"><div style="font-family:'Fredoka One',cursive;font-size:11px;color:#888">Player 2</div>
+     <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#2E7D32">${raceScore2}</div></div>`;
+}
+
+function endRace(){
+  const p1wins=raceScore1>raceScore2;
+  const tied=raceScore1===raceScore2;
+  showResult(
+    tied?'🤝':p1wins?'🏆':'🏆',
+    tied?'It\'s a tie!':p1wins?profile.playerName+' wins the race!':'Player 2 wins!',
+    Math.max(raceScore1,raceScore2), raceTotalWords,
+    Math.round(((raceScore1+raceScore2)/(raceTotalWords*200))*100),
+    true
+  );
+}
+
+// ═══════════════════════════════════════
+//  MODE 4 — ACCURACY CHALLENGE
+// ═══════════════════════════════════════
+let accWord='',accStreak=0,accLives=5,accScore=0,accTotal=0,accCorrect=0;
+
+function startAccuracy(){
+  accStreak=0;accLives=5;accScore=0;accTotal=0;accCorrect=0;
+  document.getElementById('acc-input').value='';
+  showScreen('screen-acc');
+  hideFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  hideHUD();
+  showFrogStage();
+  nextAccWord();
+  if(profile.isEasy) speak('Type each word perfectly — no mistakes!');
+}
+
+function nextAccWord(){
+  accWord=randWord();
+  accTotal++;
+  renderLetterRow('acc-letter-row',accWord,'');
+  document.getElementById('acc-streak').textContent='🔥 Streak: '+accStreak;
+  updateAccLives();
+  document.getElementById('acc-input').value='';
+  setTimeout(()=>document.getElementById('acc-input').focus(),200);
+  if(profile.isEasy){ speak(accWord.toLowerCase()); showAudioPill(); }
+}
+
+function handleAccInput(e){
+  const val=e.target.value.toUpperCase();
+  renderLetterRow('acc-letter-row',accWord,val);
+  if(val.length>accWord.length){e.target.value=val.slice(0,accWord.length);return;}
+}
+
+function submitAcc(){
+  const val=document.getElementById('acc-input').value.toUpperCase().trim();
+  if(val===accWord){
+    accCorrect++;accStreak++;accScore+=accWord.length*10+(accStreak*5);
+    frogJump();playSound('correct');frogWiggle();
+    if(profile.isEasy) speak('Perfect!');
+    if(accTotal>=20){
+      const acc=Math.round((accCorrect/accTotal)*100);
+      showResult('🎯','Accuracy Champion!',accScore,accCorrect,acc,true);
+    } else { setTimeout(nextAccWord,400); }
+  } else {
+    accStreak=0;accLives--;
+    frogSad();playSound('wrong');
+    updateAccLives();
+    document.getElementById('acc-streak').textContent='🔥 Streak: 0';
+    if(accLives<=0){
+      const acc=Math.round((accCorrect/accTotal)*100);
+      showResult('🎯','Keep Practising!',accScore,accCorrect,acc,accScore>=80);
+    } else {
+      document.getElementById('acc-input').value='';
+      renderLetterRow('acc-letter-row',accWord,'');
+    }
+  }
+}
+
+function updateAccLives(){
+  let h='';for(let i=0;i<5;i++) h+=i<accLives?'❤️':'🖤';
+  document.getElementById('acc-lives').innerHTML=h;
+}
+
+// ═══════════════════════════════════════
+//  MODE 5 — FIREFLY SPELLING
+// ═══════════════════════════════════════
+let ffWord='',ffTimer=45,ffScore=0,ffCorrect=0,ffTotal=0,ffShowing=false;
+
+function startFirefly(){
+  ffScore=0;ffCorrect=0;ffTotal=0;ffTimer=45;
+  showScreen('screen-acc'); // reuse acc screen layout
+  hideFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  showFrogStage();
+  document.getElementById('acc-input').value='';
+  timerInt=setInterval(()=>{
+    ffTimer--;
+    showHUD(ffScore,3,3,ffTimer,{label:'Words',val:ffCorrect});
+    if(ffTimer<=0){
+      stopAllGames();
+      showResult('🌙','Firefly Master!',ffScore,ffCorrect,ffTotal>0?Math.round(ffCorrect/ffTotal*100):0,ffScore>=60);
+    }
+  },1000);
+  showHUD(0,3,3,45,{label:'Words',val:0});
+  if(profile.isEasy) speak('Watch the letters flash, then type the word from memory!');
+  nextFireflyWord();
+}
+
+function nextFireflyWord(){
+  ffWord=randWord();ffTotal++;ffShowing=true;
+  document.getElementById('acc-letter-row').innerHTML='';
+  document.getElementById('acc-streak').textContent='👀 Watch carefully...';
+  document.getElementById('acc-lives').innerHTML='';
+  document.getElementById('acc-input').value='';
+  document.getElementById('acc-input').disabled=true;
+
+  // show letters as fireflies one by one
+  let i=0;
+  const showNext=()=>{
+    if(i>=ffWord.length){
+      // hide all after 1s
+      setTimeout(()=>{
+        document.getElementById('acc-letter-row').innerHTML='';
+        document.getElementById('acc-streak').textContent='⌨️ Now type it!';
+        document.getElementById('acc-input').disabled=false;
+        document.getElementById('acc-input').focus();
+        ffShowing=false;
+      },1000);
+      return;
+    }
+    const span=document.createElement('div');
+    span.className='letter-tile firefly-letter';
+    span.textContent=ffWord[i];
+    span.style.background='#0a1a0a';span.style.borderColor='#FFD700';span.style.color='#FFE066';
+    document.getElementById('acc-letter-row').appendChild(span);
+    i++;
+    setTimeout(showNext, profile.isEasy?700:500);
+  };
+  if(profile.isEasy) speak(ffWord.toLowerCase());
+  showNext();
+}
+
+// Reuse acc submit for firefly
+const origSubmitAcc=()=>{
+  const val=document.getElementById('acc-input').value.toUpperCase().trim();
+  if(ffShowing||!val) return;
+  if(val===ffWord){
+    ffCorrect++;ffScore+=ffWord.length*12;
+    frogJump();playSound('correct');
+    if(profile.isEasy) speak('You remembered it!');
+    showHUD(ffScore,3,3,ffTimer,{label:'Words',val:ffCorrect});
+    document.getElementById('acc-streak').textContent='✅ Correct! +'+ffWord.length*12;
+    setTimeout(nextFireflyWord,800);
+  } else {
+    playSound('wrong');frogSad();
+    document.getElementById('acc-streak').textContent='❌ It was: '+ffWord;
+    document.getElementById('acc-input').value='';
+    setTimeout(nextFireflyWord,1200);
+  }
+};
+
+// ═══════════════════════════════════════
+//  MODE 6 — BIBLE STORY TYPETHROUGH
+// ═══════════════════════════════════════
+const STORY_WORDS=[
+  {title:'Noah',words:['ARK','RAIN','DOVE','FLOOD','RAINBOW','NOAH','COVENANT','ANIMALS','FORTY','SAVED']},
+  {title:'David',words:['DAVID','STONE','SLING','GIANT','GOLIATH','SHEPHERD','COURAGE','VICTORY','LORD','KING']},
+  {title:'Daniel',words:['DANIEL','LIONS','FAITH','PRAYER','ANGEL','BABYLON','FURNACE','DARIUS','SAVED','GLORY']},
+];
+let storyModeIdx=0,storyWordIdx2=0,storyModeScore=0,storyStart=0;
+
+function startStoryMode(){
+  storyModeIdx=Math.floor(Math.random()*STORY_WORDS.length);
+  storyWordIdx2=0;storyModeScore=0;
+  const story=STORY_WORDS[storyModeIdx];
+  showScreen('screen-acc');
+  hideFrogStage();showFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  document.getElementById('acc-input').value='';
+  document.getElementById('acc-lives').innerHTML='📖 '+story.title;
+  document.getElementById('acc-streak').textContent='Type each story word!';
+  storyStart=Date.now();
+  hideHUD();
+  loadStoryWord();
+  if(profile.isEasy) speak('Let\'s type through the story of '+story.title+'!');
+}
+
+function loadStoryWord(){
+  const story=STORY_WORDS[storyModeIdx];
+  accWord=story.words[storyWordIdx2];
+  document.getElementById('acc-streak').textContent='Word '+(storyWordIdx2+1)+' of '+story.words.length+' — '+story.title;
+  renderLetterRow('acc-letter-row',accWord,'');
+  document.getElementById('acc-input').value='';
+  setTimeout(()=>document.getElementById('acc-input').focus(),200);
+  if(profile.isEasy){ speak(accWord.toLowerCase()); showAudioPill(); }
+}
+
+// ═══════════════════════════════════════
+//  MODE 7 — RHYTHM TYPER
+// ═══════════════════════════════════════
+let rhythmWord='',rhythmScore=0,rhythmCorrect=0,rhythmTimer=60,rhythmOnBeat=false;
+let rhythmInt=null,rhythmBeatInt=null,rhythmBeat=0;
+
+function startRhythm(){
+  rhythmScore=0;rhythmCorrect=0;rhythmTimer=60;rhythmBeat=0;rhythmOnBeat=false;
+  showScreen('screen-acc');
+  hideFrogStage();showFrogStage();
+  document.getElementById('game-area').innerHTML='';
+  document.getElementById('acc-input').value='';
+
+  timerInt=setInterval(()=>{
+    rhythmTimer--;
+    showHUD(rhythmScore,3,3,rhythmTimer,{label:'Combos',val:rhythmCorrect});
+    if(rhythmTimer<=0){
+      stopAllGames();
+      showResult('🎵','Rhythm Master!',rhythmScore,rhythmCorrect,rhythmCorrect>0?90:50,rhythmScore>=80);
+    }
+  },1000);
+
+  // Beat every 1.5s
+  rhythmBeatInt=setInterval(()=>{
+    rhythmBeat++;
+    rhythmOnBeat=true;
+    document.getElementById('acc-word-big')&&document.getElementById('acc-word-big').classList.add('beat-flash');
+    setTimeout(()=>{
+      rhythmOnBeat=false;
+      document.getElementById('acc-word-big')&&document.getElementById('acc-word-big').classList.remove('beat-flash');
+    },300);
+    frogWiggle();
+  },1500);
+
+  showHUD(0,3,3,60,{label:'Combos',val:0});
+  document.getElementById('acc-lives').innerHTML='🎵🎵🎵';
+  nextRhythmWord();
+  if(profile.isEasy) speak('Type on the beat for bonus points!');
+}
+
+function nextRhythmWord(){
+  rhythmWord=randWord();accWord=rhythmWord;
+  document.getElementById('acc-streak').textContent=rhythmOnBeat?'⚡ ON BEAT! Double points!':'Type on the beat for 2x!';
+  renderLetterRow('acc-letter-row',rhythmWord,'');
+  document.getElementById('acc-input').value='';
+  setTimeout(()=>document.getElementById('acc-input').focus(),200);
+  if(profile.isEasy){ speak(rhythmWord.toLowerCase()); showAudioPill(); }
+}
+
+// ═══════════════════════════════════════
+//  SHARED ACC SUBMIT (handles all acc-input modes)
+// ═══════════════════════════════════════
+function submitAcc(){
+  const val=document.getElementById('acc-input').value.toUpperCase().trim();
+  if(!val) return;
+
+  if(currentMode==='firefly'){ origSubmitAcc(); return; }
+  if(currentMode==='rhythm'){
+    if(val===rhythmWord){
+      rhythmCorrect++;
+      const pts=rhythmOnBeat?rhythmWord.length*20:rhythmWord.length*10;
+      rhythmScore+=pts;
+      frogJump();playSound('correct');
+      if(profile.isEasy) speak(rhythmOnBeat?'On the beat! Amazing!':'Well done!');
+      showScorePop(pts);
+      showHUD(rhythmScore,3,3,rhythmTimer,{label:'Combos',val:rhythmCorrect});
+      document.getElementById('acc-streak').textContent=rhythmOnBeat?'🎵 ON BEAT! +'+pts:'Good! +'+pts;
+      setTimeout(nextRhythmWord,400);
+    } else { playSound('wrong');frogSad(); document.getElementById('acc-input').value=''; renderLetterRow('acc-letter-row',rhythmWord,''); }
+    return;
+  }
+  if(currentMode==='story'){
+    if(val===accWord){
+      storyModeScore+=accWord.length*10;
+      storyWordIdx2++;frogJump();playSound('correct');
+      if(profile.isEasy) speak('Great!');
+      const story=STORY_WORDS[storyModeIdx];
+      if(storyWordIdx2>=story.words.length){
+        const elapsed=Math.round((Date.now()-storyStart)/1000);
+        showResult('📖','Story Complete!',storyModeScore,story.words.length,100,true);
+      } else { setTimeout(loadStoryWord,400); }
+    } else { playSound('wrong');frogSad(); document.getElementById('acc-input').value=''; renderLetterRow('acc-letter-row',accWord,''); }
+    return;
+  }
+  // default accuracy mode
+  if(val===accWord){
+    accCorrect++;accStreak++;accScore+=accWord.length*10+(accStreak*5);
+    frogJump();playSound('correct');frogWiggle();
+    if(profile.isEasy) speak('Perfect!');
+    if(accTotal>=20){
+      showResult('🎯','Accuracy Champion!',accScore,accCorrect,Math.round(accCorrect/accTotal*100),true);
+    } else { setTimeout(nextAccWord,400); }
+  } else {
+    accStreak=0;accLives--;
+    frogSad();playSound('wrong');
+    updateAccLives();
+    document.getElementById('acc-streak').textContent='🔥 Streak: 0';
+    document.getElementById('acc-input').value='';
+    renderLetterRow('acc-letter-row',accWord,'');
+    if(accLives<=0){
+      showResult('🎯','Keep Practising!',accScore,accCorrect,accTotal>0?Math.round(accCorrect/accTotal*100):0,accScore>=80);
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+//  LETTER ROW RENDERER
+// ═══════════════════════════════════════
+function renderLetterRow(containerId,word,typed){
+  const row=document.getElementById(containerId);
+  if(!row) return;
+  row.innerHTML='';
+  for(let i=0;i<word.length;i++){
+    const div=document.createElement('div');
+    div.className='letter-tile';
+    div.textContent=word[i];
+    if(i<typed.length){
+      div.classList.add(typed[i]===word[i]?'correct-l':'wrong-l');
+    }
+    row.appendChild(div);
+  }
+}
+
+// ═══════════════════════════════════════
+//  AUDIO — SPEECH + SFX + MUSIC
+// ═══════════════════════════════════════
+let speechReady=false;
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.85;u.pitch=1.1;u.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const female=voices.find(v=>v.name.match(/samantha|victoria|karen|moira|tessa|fiona|female|google uk english female/i))||voices[0];
+  if(female) u.voice=female;
+  window.speechSynthesis.speak(u);
+}
+function showAudioPill(){
+  const p=document.getElementById('audio-pill');
+  p.className='audio-pill show';
+  setTimeout(()=>p.className='audio-pill',1800);
+}
+
+let sfxCtx=null;
+function initSFX(){ if(!sfxCtx) sfxCtx=new(window.AudioContext||window.webkitAudioContext)(); }
+function playSound(type){
+  initSFX();if(!sfxCtx) return;
+  const o=sfxCtx.createOscillator(),g=sfxCtx.createGain();
+  o.connect(g);g.connect(sfxCtx.destination);
+  if(type==='correct'){
+    o.type='triangle';
+    o.frequency.setValueAtTime(523,sfxCtx.currentTime);
+    o.frequency.setValueAtTime(784,sfxCtx.currentTime+.08);
+    g.gain.setValueAtTime(.18,sfxCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0,sfxCtx.currentTime+.22);
+    o.start();o.stop(sfxCtx.currentTime+.22);
+  } else if(type==='wrong'){
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(180,sfxCtx.currentTime);
+    g.gain.setValueAtTime(.12,sfxCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0,sfxCtx.currentTime+.18);
+    o.start();o.stop(sfxCtx.currentTime+.18);
+  } else if(type==='complete'){
+    [523,659,784,1046].forEach((f,i)=>{
+      const oo=sfxCtx.createOscillator(),gg=sfxCtx.createGain();
+      oo.connect(gg);gg.connect(sfxCtx.destination);
+      oo.type='triangle';oo.frequency.value=f;
+      gg.gain.setValueAtTime(.14,sfxCtx.currentTime+i*.12);
+      gg.gain.linearRampToValueAtTime(0,sfxCtx.currentTime+i*.12+.22);
+      oo.start(sfxCtx.currentTime+i*.12);oo.stop(sfxCtx.currentTime+i*.12+.25);
+    });
+  }
+}
+
+// Background music — sunny upbeat pond tune
+let audioCtx=null,musicPlaying=false,musicNodes=[],musicSched=null,nextNote=0,noteIdx=0;
+const MEL=[523,587,659,523,587,659,698,659,587,523,440,523,392,440,523,0,
+           659,587,523,440,523,587,659,0,784,698,659,587,659,523,587,0];
+const BAS=[261,0,329,0,261,0,349,0,220,0,261,0,196,0,261,0,
+           329,0,261,0,220,0,261,0,392,0,329,0,294,0,261,0];
+const ND=0.22,LA=0.3;
+function initMusic(){if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function playTone(f,st,dur,gv,tp){
+  if(!f||!audioCtx) return;
+  const o=audioCtx.createOscillator(),gn=audioCtx.createGain(),m=audioCtx.createGain();
+  o.type=tp||'sine';o.frequency.setValueAtTime(f,st);
+  gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(gv,st+.03);
+  gn.gain.setValueAtTime(gv,st+dur*.75);gn.gain.linearRampToValueAtTime(0,st+dur);
+  m.gain.value=.11;o.connect(gn);gn.connect(m);m.connect(audioCtx.destination);
+  o.start(st);o.stop(st+dur+.04);musicNodes.push(o);
+}
+function schedNotes(){
+  while(nextNote<audioCtx.currentTime+LA){
+    const i=noteIdx%MEL.length;
+    playTone(MEL[i],nextNote,ND*.85,.5,'triangle');
+    playTone(BAS[i],nextNote,ND*.9,.25,'sine');
+    nextNote+=ND;noteIdx++;
+  }
+}
+function startMusic(){
+  initMusic();initSFX();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  if(sfxCtx&&sfxCtx.state==='suspended') sfxCtx.resume();
+  if(window.speechSynthesis) window.speechSynthesis.getVoices();
+  nextNote=audioCtx.currentTime+.05;noteIdx=0;musicPlaying=true;
+  musicSched=setInterval(schedNotes,50);
+  document.getElementById('music-btn').textContent='🎵';
+}
+function stopMusic(){
+  musicPlaying=false;
+  if(musicSched){clearInterval(musicSched);musicSched=null;}
+  musicNodes.forEach(n=>{try{n.stop()}catch(e){}});musicNodes=[];
+  document.getElementById('music-btn').textContent='🔇';
+}
+function toggleMusic(){ musicPlaying?stopMusic():startMusic(); }
+function autoStart(){ if(!musicPlaying) startMusic(); }
+document.addEventListener('touchstart',autoStart,{once:true});
+document.addEventListener('click',autoStart,{once:true});
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+window.addEventListener('load',()=>{
+  // First check shared KK profile
+  var kkRaw = null;
+  try { kkRaw = localStorage.getItem('kk_profile'); } catch(e){}
+  var kkProf = kkRaw ? JSON.parse(kkRaw) : null;
+
+  profile = loadProfile();
+
+  if(!profile && kkProf && kkProf.name) {
+    // Auto-create frog profile from KK profile
+    profile = {
+      playerName: kkProf.name,
+      frogName: kkProf.name + ' Frog',
+      frogColor: kkProf.isEasy ? '#E91E63' : '#2196F3',
+      frogColorDark: kkProf.isEasy ? '#880E4F' : '#1565C0',
+      isEasy: kkProf.isEasy || kkProf.age <= 6,
+      totalWins: 0,
+      modeWins: {},
+      modeScores: {},
+    };
+    saveProfile();
+  }
+
+  if(profile){ initApp(); }
+  // else onboarding shown
+});
+</script>
+</body>
+</html>
