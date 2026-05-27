@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>X & O — Solo Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: #0d0d1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+      color: #fff;
+    }
+
+    /* MUSIC BTN */
+    .music-btn {
+      position: fixed; top: 14px; right: 16px; z-index: 999;
+      background: #1a1a3e; border: 2px solid #2a2a6e; border-radius: 50%;
+      width: 44px; height: 44px; font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .music-btn:active { transform: scale(0.92); }
+    .music-btn.playing { border-color: #a855f7; animation: musicPulse 1.5s ease-in-out infinite; }
+    @keyframes musicPulse { 0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,0.4)} 50%{box-shadow:0 0 0 8px rgba(168,85,247,0)} }
+
+    .title {
+      font-family: 'Fredoka One', cursive;
+      font-size: 42px; letter-spacing: 2px; margin-bottom: 2px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .screen { width: 100%; max-width: 380px; display: none; flex-direction: column; align-items: center; gap: 16px; }
+    .screen.active { display: flex; }
+
+    /* BUTTONS */
+    .btn {
+      font-family: 'Fredoka One', cursive; font-size: 19px; letter-spacing: 1px;
+      padding: 13px 32px; border: none; border-radius: 50px; cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; }
+    .btn-secondary { background: #1a1a3e; border: 2px solid #2a2a6e; color: #aaa; font-size: 14px; padding: 10px 22px; }
+    .btn-gold { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e; }
+
+    /* PLAYER SELECT */
+    .player-cards { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .player-card {
+      background: #1a1a3e; border: 2px solid #2a2a6e; border-radius: 18px;
+      padding: 18px 20px; cursor: pointer;
+      display: flex; align-items: center; gap: 16px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .player-card:hover { border-color: #a855f7; background: #1e1e4e; }
+    .player-card .p-avatar { font-size: 44px; flex-shrink: 0; }
+    .player-card .p-info { text-align: left; }
+    .player-card .p-name { font-family: 'Fredoka One', cursive; font-size: 24px; color: #e0d0ff; }
+    .player-card .p-sub { font-size: 13px; color: #888; margin-top: 2px; }
+    .player-card .p-progress { font-size: 12px; color: #a855f7; font-weight: 700; margin-top: 4px; }
+
+    /* STAGE SELECT */
+    .stage-header { width: 100%; text-align: center; }
+    .stage-header .player-label { font-family: 'Fredoka One', cursive; font-size: 22px; color: #e0d0ff; margin-bottom: 4px; }
+    .stage-header .stage-sub { font-size: 13px; color: #888; }
+
+    .stages-grid { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .stage-card {
+      background: #1a1a3e; border: 2px solid #2a2a6e; border-radius: 16px;
+      padding: 14px 16px; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .stage-card.unlocked:hover { border-color: #a855f7; background: #1e1e4e; }
+    .stage-card.locked { opacity: 0.45; cursor: not-allowed; }
+    .stage-card.current-stage { border-color: #ffd200; }
+    .stage-icon { font-size: 36px; flex-shrink: 0; width: 44px; text-align: center; }
+    .stage-info { flex: 1; }
+    .stage-name { font-family: 'Fredoka One', cursive; font-size: 19px; }
+    .stage-desc { font-size: 12px; color: #888; margin-top: 2px; }
+    .stage-stats { font-size: 11px; margin-top: 5px; display: flex; gap: 8px; }
+    .stat-w { color: #4ade80; font-weight: 800; }
+    .stat-l { color: #f87171; font-weight: 800; }
+    .stat-d { color: #ffd200; font-weight: 800; }
+    .stage-lock { font-size: 22px; flex-shrink: 0; }
+    .unlock-hint { font-size: 11px; color: #666; margin-top: 3px; }
+
+    /* WINS NEEDED BADGE */
+    .wins-badge {
+      background: #2a1a4e; border: 1px solid #a855f7; border-radius: 20px;
+      padding: 3px 10px; font-size: 11px; color: #a855f7; font-weight: 700;
+      display: inline-block; margin-top: 4px;
+    }
+
+    /* GAME SCREEN */
+    .game-header {
+      width: 100%; background: #1a1a3e; border: 2px solid #2a2a6e;
+      border-radius: 16px; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .game-player { text-align: center; }
+    .game-player .gp-name { font-size: 13px; color: #888; font-weight: 700; text-transform: uppercase; }
+    .game-player .gp-mark { font-family: 'Fredoka One', cursive; font-size: 26px; }
+    .game-player .gp-score { font-family: 'Fredoka One', cursive; font-size: 28px; color: #ffd200; }
+    .game-player.active-gp .gp-name { color: #a855f7; }
+    .game-vs { font-size: 13px; color: #444; font-weight: 700; text-align: center; }
+    .game-vs .vs-draws { font-family: 'Fredoka One', cursive; font-size: 18px; color: #555; }
+
+    .stage-badge {
+      background: linear-gradient(135deg, #1a1a3e, #2a1a4e);
+      border: 1px solid #a855f7; border-radius: 20px;
+      padding: 5px 14px; font-size: 13px; color: #c084fc; font-weight: 700;
+    }
+
+    .turn-banner { font-size: 15px; font-weight: 800; color: #c084fc; min-height: 22px; letter-spacing: 0.5px; }
+
+    .board {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; width: 100%; max-width: 340px;
+    }
+    .cell {
+      aspect-ratio: 1; background: #1a1a3e; border-radius: 16px;
+      border: 2px solid #2a2a6e; display: flex; align-items: center;
+      justify-content: center; font-family: 'Fredoka One', cursive;
+      font-size: 58px; cursor: pointer;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .cell:hover:not(.taken) { background: #1e1e4e; border-color: #a855f7; }
+    .cell:active:not(.taken) { transform: scale(0.94); }
+    .cell.taken { cursor: default; }
+    .cell.x-cell { color: #f87171; }
+    .cell.o-cell { color: #60a5fa; }
+    .cell.winner-cell { background: #1a3a1a; border-color: #4ade80; animation: winPulse 0.5s ease; }
+    .cell.loser-cell { background: #3a1a1a; border-color: #f87171; }
+    @keyframes winPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    .cell.pop { animation: pop 0.2s ease; }
+    @keyframes pop { 0%{transform:scale(0.8)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+    .result-box {
+      width: 100%; background: #1a1a3e; border-radius: 16px;
+      border: 2px solid #2a2a6e; padding: 16px; text-align: center;
+      min-height: 60px;
+    }
+    .result-box .result-msg { font-family: 'Fredoka One', cursive; font-size: 24px; margin-bottom: 6px; }
+    .result-box .result-sub { font-size: 13px; color: #888; }
+    .result-win .result-msg { color: #4ade80; }
+    .result-lose .result-msg { color: #f87171; }
+    .result-draw .result-msg { color: #ffd200; }
+
+    /* UNLOCK CELEBRATION */
+    .unlock-box {
+      width: 100%; background: linear-gradient(135deg, #1a0a3e, #2a1060);
+      border: 2px solid #a855f7; border-radius: 16px;
+      padding: 14px; text-align: center; display: none;
+      animation: unlockPop 0.5s ease;
+    }
+    @keyframes unlockPop { 0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .unlock-box .unlock-title { font-family: 'Fredoka One', cursive; font-size: 20px; color: #ffd200; }
+    .unlock-box .unlock-sub { font-size: 13px; color: #c084fc; margin-top: 4px; }
+
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    /* WINS PROGRESS BAR */
+    .wins-progress { width: 100%; }
+    .wins-progress-label { font-size: 12px; color: #888; margin-bottom: 6px; text-align: center; }
+    .wins-track { background: #1a1a3e; border-radius: 20px; height: 10px; overflow: hidden; border: 1px solid #2a2a6e; }
+    .wins-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #a855f7, #6366f1); transition: width 0.4s ease; }
+    .wins-pips { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+    .pip { width: 18px; height: 18px; border-radius: 50%; background: #2a2a6e; border: 2px solid #3a3a7e; font-size: 10px; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+    .pip.filled { background: #a855f7; border-color: #c084fc; }
+  </style>
+</head>
+<body>
+
+  <button class="music-btn playing" id="music-btn" onclick="toggleMusic()" title="Toggle music">🎵</button>
+
+  <div class="title">Solo Challenge</div>
+  <div class="subtitle">X &amp; O · vs Robot Rex</div>
+
+  <!-- SCREEN: Player Select -->
+  <div class="screen active" id="screen-player">
+    <div style="font-size:15px;color:#888;text-align:center;">Who's playing today?</div>
+    <div class="player-cards">
+      <div class="player-card" onclick="selectPlayer('dominion')">
+        <div class="p-avatar">🏆</div>
+        <div class="p-info">
+          <div class="p-name">Dominion</div>
+          <div class="p-sub">Age 7 · Rising Champion</div>
+          <div class="p-progress" id="dominion-progress">Loading...</div>
+        </div>
+      </div>
+      <div class="player-card" onclick="selectPlayer('anu')">
+        <div class="p-avatar">⭐</div>
+        <div class="p-info">
+          <div class="p-name">Anu</div>
+          <div class="p-sub">Age 5 · Little Star</div>
+          <div class="p-progress" id="anu-progress">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: Stage Select -->
+  <div class="screen" id="screen-stages">
+    <div class="stage-header">
+      <div class="player-label" id="stage-player-label">Dominion</div>
+      <div class="stage-sub">Choose your challenge level</div>
+    </div>
+    <div class="stages-grid" id="stages-grid"></div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-player')">← Change Player</button>
+  </div>
+
+  <!-- SCREEN: Game -->
+  <div class="screen" id="screen-game">
+    <div class="game-header">
+      <div class="game-player" id="gp-player">
+        <div class="gp-name" id="gp-player-name">You</div>
+        <div class="gp-mark" style="color:#f87171">✕</div>
+        <div class="gp-score" id="gp-player-score">0</div>
+      </div>
+      <div class="game-vs">
+        <div>VS</div>
+        <div class="vs-draws" id="gp-draws">0</div>
+        <div style="font-size:10px;color:#444">DRAWS</div>
+      </div>
+      <div class="game-player" id="gp-rex">
+        <div class="gp-name">Rex</div>
+        <div class="gp-mark" id="rex-face" style="color:#a855f7;font-size:22px">🐣</div>
+        <div class="gp-score" id="gp-rex-score">0</div>
+      </div>
+    </div>
+
+    <div class="stage-badge" id="stage-badge">🐣 Baby Rex</div>
+    <div class="turn-banner" id="turn-banner">Your turn (✕)</div>
+
+    <div class="board" id="board">
+      <div class="cell" onclick="cellClick(0)"></div>
+      <div class="cell" onclick="cellClick(1)"></div>
+      <div class="cell" onclick="cellClick(2)"></div>
+      <div class="cell" onclick="cellClick(3)"></div>
+      <div class="cell" onclick="cellClick(4)"></div>
+      <div class="cell" onclick="cellClick(5)"></div>
+      <div class="cell" onclick="cellClick(6)"></div>
+      <div class="cell" onclick="cellClick(7)"></div>
+      <div class="cell" onclick="cellClick(8)"></div>
+    </div>
+
+    <div class="wins-progress" id="wins-progress">
+      <div class="wins-progress-label" id="wins-progress-label">Wins to unlock next stage: 0 / 3</div>
+      <div class="wins-track"><div class="wins-fill" id="wins-fill" style="width:0%"></div></div>
+      <div class="wins-pips" id="wins-pips"></div>
+    </div>
+
+    <div class="result-box" id="result-box" style="display:none">
+      <div class="result-msg" id="result-msg">You win!</div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+
+    <div class="unlock-box" id="unlock-box">
+      <div class="unlock-title" id="unlock-title">🔓 New Stage Unlocked!</div>
+      <div class="unlock-sub" id="unlock-sub">You unlocked Sleepy Rex!</div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" id="next-btn" onclick="nextRound()" style="display:none">▶ Play Again</button>
+      <button class="btn btn-secondary" onclick="goToStages()">📋 Stages</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-player')">🏠 Home</button>
+    </div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────
+    //  STAGE DEFINITIONS
+    // ─────────────────────────────────────────
+    const STAGES = [
+      {
+        id: 0,
+        name: 'Baby Rex',
+        icon: '🐣',
+        color: '#4ade80',
+        desc: 'Rex is just a baby — plays randomly!',
+        winsNeeded: 3,
+        ai: 'random'
+      },
+      {
+        id: 1,
+        name: 'Sleepy Rex',
+        icon: '😴',
+        color: '#60a5fa',
+        desc: 'Rex sometimes wakes up and blocks you...',
+        winsNeeded: 3,
+        ai: 'sleepy'
+      },
+      {
+        id: 2,
+        name: 'Grumpy Rex',
+        icon: '😤',
+        color: '#f97316',
+        desc: 'Rex always blocks and grabs easy wins!',
+        winsNeeded: 3,
+        ai: 'grumpy'
+      },
+      {
+        id: 3,
+        name: 'Beast Rex',
+        icon: '👾',
+        color: '#a855f7',
+        desc: 'Rex plays perfectly — the final boss!',
+        winsNeeded: null,
+        ai: 'beast'
+      }
+    ];
+
+    const WINS_COMBOS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    // ─────────────────────────────────────────
+    //  SAVE / LOAD PROGRESS
+    // ─────────────────────────────────────────
+    function loadProgress(player) {
+      try {
+        const raw = localStorage.getItem('xo_solo_' + player);
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return {
+        unlockedStage: 0,
+        stages: STAGES.map(() => ({ wins: 0, losses: 0, draws: 0, winsToward: 0 }))
+      };
+    }
+
+    function saveProgress(player, data) {
+      try { localStorage.setItem('xo_solo_' + player, JSON.stringify(data)); } catch(e) {}
+    }
+
+    // ─────────────────────────────────────────
+    //  PLAYER SELECT
+    // ─────────────────────────────────────────
+    let currentPlayer = 'dominion';
+    let currentStageId = 0;
+    let progress = null;
+
+    // session scores (reset per stage visit)
+    let sessionWins = 0, sessionLosses = 0, sessionDraws = 0;
+
+    function updatePlayerCards() {
+      ['dominion', 'anu'].forEach(p => {
+        const prog = loadProgress(p);
+        const stage = STAGES[prog.unlockedStage];
+        const el = document.getElementById(p + '-progress');
+        el.textContent = '🔓 Stage ' + (prog.unlockedStage + 1) + ' — ' + stage.icon + ' ' + stage.name;
+      });
+    }
+
+    function selectPlayer(player) {
+      currentPlayer = player;
+      progress = loadProgress(player);
+      document.getElementById('stage-player-label').textContent = player === 'dominion' ? 'Dominion' : 'Anu';
+      renderStages();
+      showScreen('screen-stages');
+    }
+
+    // ─────────────────────────────────────────
+    //  STAGE SELECT
+    // ─────────────────────────────────────────
+    function renderStages() {
+      const grid = document.getElementById('stages-grid');
+      grid.innerHTML = '';
+      STAGES.forEach((stage, i) => {
+        const unlocked = i <= progress.unlockedStage;
+        const isCurrent = i === progress.unlockedStage;
+        const stats = progress.stages[i];
+        const div = document.createElement('div');
+        div.className = 'stage-card ' + (unlocked ? 'unlocked' : 'locked') + (isCurrent ? ' current-stage' : '');
+
+        let statsHtml = '';
+        if (unlocked) {
+          statsHtml = '<div class="stage-stats">'
+            + '<span class="stat-w">✔ ' + stats.wins + ' W</span>'
+            + '<span class="stat-l">✘ ' + stats.losses + ' L</span>'
+            + '<span class="stat-d">— ' + stats.draws + ' D</span>'
+            + '</div>';
+        }
+
+        let bottomHtml = '';
+        if (isCurrent && stage.winsNeeded) {
+          const toward = stats.winsToward || 0;
+          bottomHtml = '<div class="wins-badge">🏆 ' + toward + ' / ' + stage.winsNeeded + ' wins to unlock next</div>';
+        } else if (!unlocked) {
+          const prev = progress.stages[i - 1];
+          const toward = prev ? (prev.winsToward || 0) : 0;
+          bottomHtml = '<div class="unlock-hint">Win ' + STAGES[i-1].winsNeeded + ' times on ' + STAGES[i-1].name + ' to unlock</div>';
+        } else if (unlocked && !isCurrent) {
+          bottomHtml = '<div style="font-size:11px;color:#4ade80;margin-top:3px;">✅ Completed!</div>';
+        }
+
+        div.innerHTML = '<div class="stage-icon">' + stage.icon + '</div>'
+          + '<div class="stage-info">'
+          + '<div class="stage-name" style="color:' + stage.color + '">' + stage.name + '</div>'
+          + '<div class="stage-desc">' + stage.desc + '</div>'
+          + statsHtml + bottomHtml
+          + '</div>'
+          + '<div class="stage-lock">' + (unlocked ? (isCurrent ? '▶' : '🔁') : '🔒') + '</div>';
+
+        if (unlocked) div.onclick = () => startStage(i);
+        grid.appendChild(div);
+      });
+    }
+
+    // ─────────────────────────────────────────
+    //  GAME STATE
+    // ─────────────────────────────────────────
+    let board = Array(9).fill(null);
+    let gameOver = false;
+    let playerMark = 'x';
+    let rexMark = 'o';
+
+    function startStage(stageId) {
+      currentStageId = stageId;
+      sessionWins = 0; sessionLosses = 0; sessionDraws = 0;
+      resetBoard();
+      const stage = STAGES[stageId];
+      document.getElementById('stage-badge').textContent = stage.icon + ' ' + stage.name;
+      document.getElementById('rex-face').textContent = stage.icon;
+      document.getElementById('gp-player-name').textContent = kkGetProfile().name;
+      document.getElementById('gp-player-score').textContent = 0;
+      document.getElementById('gp-rex-score').textContent = 0;
+      document.getElementById('gp-draws').textContent = 0;
+      document.getElementById('unlock-box').style.display = 'none';
+      updateWinsProgress();
+      showScreen('screen-game');
+    }
+
+    function resetBoard() {
+      board = Array(9).fill(null);
+      gameOver = false;
+      const cells = document.querySelectorAll('#board .cell');
+      cells.forEach(c => { c.textContent = ''; c.className = 'cell'; });
+      document.getElementById('result-box').style.display = 'none';
+      document.getElementById('result-box').className = 'result-box';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('unlock-box').style.display = 'none';
+      document.getElementById('turn-banner').textContent = 'Your turn (✕)';
+      document.getElementById('gp-player').classList.add('active-gp');
+      document.getElementById('gp-rex').classList.remove('active-gp');
+    }
+
+    function nextRound() {
+      resetBoard();
+    }
+
+    function goToStages() {
+      progress = loadProgress(currentPlayer);
+      renderStages();
+      showScreen('screen-stages');
+    }
+
+    // ─────────────────────────────────────────
+    //  GAMEPLAY
+    // ─────────────────────────────────────────
+    function cellClick(i) {
+      if (gameOver || board[i]) return;
+      placeMove(i, playerMark);
+      if (gameOver) return;
+      document.getElementById('turn-banner').textContent = '🤖 Rex is thinking...';
+      document.getElementById('gp-player').classList.remove('active-gp');
+      document.getElementById('gp-rex').classList.add('active-gp');
+      setTimeout(() => {
+        const move = rexMove();
+        if (move !== -1) placeMove(move, rexMark);
+        if (!gameOver) {
+          document.getElementById('turn-banner').textContent = 'Your turn (✕)';
+          document.getElementById('gp-player').classList.add('active-gp');
+          document.getElementById('gp-rex').classList.remove('active-gp');
+        }
+      }, STAGES[currentStageId].ai === 'random' ? 700 : 500);
+    }
+
+    function placeMove(i, mark) {
+      board[i] = mark;
+      const cells = document.querySelectorAll('#board .cell');
+      cells[i].textContent = mark === 'x' ? '✕' : '○';
+      cells[i].classList.add('taken', mark === 'x' ? 'x-cell' : 'o-cell', 'pop');
+
+      const win = checkWin(board);
+      if (win) {
+        const playerWon = mark === playerMark;
+        win.forEach(idx => cells[idx].classList.add(playerWon ? 'winner-cell' : 'loser-cell'));
+        showResult(playerWon ? 'win' : 'lose');
+        gameOver = true;
+        document.getElementById('turn-banner').textContent = '';
+        document.getElementById('gp-player').classList.remove('active-gp');
+        document.getElementById('gp-rex').classList.remove('active-gp');
+        return;
+      }
+      if (board.every(v => v)) {
+        showResult('draw');
+        gameOver = true;
+        document.getElementById('turn-banner').textContent = '';
+        return;
+      }
+    }
+
+    function showResult(outcome) {
+      const stage = STAGES[currentStageId];
+      const playerName = currentPlayer === 'dominion' ? 'Dominion' : 'Anu';
+      const rb = document.getElementById('result-box');
+      const rm = document.getElementById('result-msg');
+      const rs = document.getElementById('result-sub');
+      rb.style.display = 'block';
+
+      progress = loadProgress(currentPlayer);
+      const stageStats = progress.stages[currentStageId];
+
+      if (outcome === 'win') {
+        sessionWins++;
+        stageStats.wins++;
+        stageStats.winsToward = (stageStats.winsToward || 0) + 1;
+        document.getElementById('gp-player-score').textContent = sessionWins;
+        rb.className = 'result-box result-win';
+        rm.textContent = '🏆 You beat ' + stage.icon + ' ' + stage.name + '!';
+        const msgs = ['Amazing!', 'Brilliant!', 'You\'re unstoppable!', 'Rex is crying 😢', 'Champion move!'];
+        rs.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+
+        // check unlock
+        if (stage.winsNeeded && stageStats.winsToward >= stage.winsNeeded && progress.unlockedStage === currentStageId) {
+          progress.unlockedStage = currentStageId + 1;
+          stageStats.winsToward = stage.winsNeeded; // cap it
+          const nextStage = STAGES[currentStageId + 1];
+          const ub = document.getElementById('unlock-box');
+          document.getElementById('unlock-title').textContent = '🔓 New Stage Unlocked!';
+          document.getElementById('unlock-sub').textContent = 'You unlocked ' + nextStage.icon + ' ' + nextStage.name + '!';
+          ub.style.display = 'block';
+        }
+      } else if (outcome === 'lose') {
+        sessionLosses++;
+        stageStats.losses++;
+        document.getElementById('gp-rex-score').textContent = sessionLosses;
+        rb.className = 'result-box result-lose';
+        rm.textContent = '😅 Rex wins this one!';
+        const msgs = ['Don\'t give up!', 'Try again, you\'ve got this!', 'Rex got lucky!', 'One more round!'];
+        rs.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      } else {
+        sessionDraws++;
+        stageStats.draws++;
+        document.getElementById('gp-draws').textContent = sessionDraws;
+        rb.className = 'result-box result-draw';
+        rm.textContent = '🤝 It\'s a Draw!';
+        rs.textContent = 'So close! Play again!';
+      }
+
+      saveProgress(currentPlayer, progress);
+      updateWinsProgress();
+      document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function updateWinsProgress() {
+      const stage = STAGES[currentStageId];
+      const prog = loadProgress(currentPlayer);
+      const toward = prog.stages[currentStageId].winsToward || 0;
+      const needed = stage.winsNeeded || 3;
+      const pct = Math.min(100, (toward / needed) * 100);
+      const label = document.getElementById('wins-progress-label');
+      const fill = document.getElementById('wins-fill');
+      const pips = document.getElementById('wins-pips');
+
+      if (!stage.winsNeeded) {
+        label.textContent = '👾 Final Boss — no unlock needed!';
+        fill.style.width = '100%';
+        pips.innerHTML = '';
+        return;
+      }
+
+      if (prog.unlockedStage > currentStageId) {
+        label.textContent = '✅ Stage complete!';
+        fill.style.width = '100%';
+      } else {
+        label.textContent = 'Wins to unlock next: ' + toward + ' / ' + needed;
+        fill.style.width = pct + '%';
+      }
+
+      pips.innerHTML = '';
+      for (let i = 0; i < needed; i++) {
+        const pip = document.createElement('div');
+        pip.className = 'pip' + (i < toward ? ' filled' : '');
+        pip.textContent = i < toward ? '★' : '☆';
+        pips.appendChild(pip);
+      }
+    }
+
+    // ─────────────────────────────────────────
+    //  AI ENGINES
+    // ─────────────────────────────────────────
+    function rexMove() {
+      const ai = STAGES[currentStageId].ai;
+      if (ai === 'random') return randomMove();
+      if (ai === 'sleepy') return sleepyMove();
+      if (ai === 'grumpy') return grumpyMove();
+      if (ai === 'beast') return minimaxMove();
+      return randomMove();
+    }
+
+    function randomMove() {
+      const empty = board.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
+      return empty.length ? empty[Math.floor(Math.random() * empty.length)] : -1;
+    }
+
+    function sleepyMove() {
+      // 65% random, 35% smart (win or block)
+      if (Math.random() < 0.65) return randomMove();
+      return findWinOrBlock(rexMark) || findWinOrBlock(playerMark) || randomMove();
+    }
+
+    function grumpyMove() {
+      // always win if can, always block if needed, else centre/corner/random
+      return findWinOrBlock(rexMark)
+        || findWinOrBlock(playerMark)
+        || (board[4] === null ? 4 : null)
+        || [0,2,6,8].find(c => board[c] === null)
+        || randomMove();
+    }
+
+    function minimaxMove() {
+      let best = -Infinity, bestMove = -1;
+      board.forEach((v, i) => {
+        if (v !== null) return;
+        board[i] = rexMark;
+        const score = minimax(board, 0, false);
+        board[i] = null;
+        if (score > best) { best = score; bestMove = i; }
+      });
+      return bestMove;
+    }
+
+    function minimax(b, depth, isMax) {
+      const win = checkWin(b);
+      if (win) {
+        const winner = b[win[0]];
+        return winner === rexMark ? 10 - depth : depth - 10;
+      }
+      if (b.every(v => v)) return 0;
+      if (isMax) {
+        let best = -Infinity;
+        b.forEach((v, i) => {
+          if (v !== null) return;
+          b[i] = rexMark;
+          best = Math.max(best, minimax(b, depth + 1, false));
+          b[i] = null;
+        });
+        return best;
+      } else {
+        let best = Infinity;
+        b.forEach((v, i) => {
+          if (v !== null) return;
+          b[i] = playerMark;
+          best = Math.min(best, minimax(b, depth + 1, true));
+          b[i] = null;
+        });
+        return best;
+      }
+    }
+
+    function findWinOrBlock(mark) {
+      for (const combo of WINS_COMBOS) {
+        const [a, b, c] = combo;
+        const vals = [board[a], board[b], board[c]];
+        if (vals.filter(v => v === mark).length === 2 && vals.filter(v => v === null).length === 1) {
+          return combo[vals.indexOf(null)];
+        }
+      }
+      return null;
+    }
+
+    function checkWin(b) {
+      for (const combo of WINS_COMBOS) {
+        const [a, c, d] = combo;
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) return combo;
+      }
+      return null;
+    }
+
+    // ─────────────────────────────────────────
+    //  SCREENS
+    // ─────────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id === 'screen-player') updatePlayerCards();
+    }
+
+    // ── PROFILE ──
+    var KK_PROFILE_KEY = 'kk_profile';
+    function kkGetProfile() {
+      try { var r=localStorage.getItem(KK_PROFILE_KEY); return r?JSON.parse(r):{name:'Player',age:7,isEasy:false}; } catch(e) { return {name:'Player',age:7,isEasy:false}; }
+    }
+
+    function updatePlayerCards() {
+      var prof = kkGetProfile();
+      var avatar = prof.age <= 6 ? '⭐' : '🏆';
+      var el = document.getElementById('main-player-avatar');
+      if(el) el.textContent = avatar;
+      var nm = document.getElementById('main-player-name');
+      if(nm) nm.textContent = prof.name;
+      var sub = document.getElementById('main-player-sub');
+      if(sub) sub.textContent = 'Age ' + prof.age + ' · Rising Champion';
+      var prog = loadProgress(prof.name.toLowerCase().replace(/\s+/g,'_'));
+      var stage = STAGES[prog.unlockedStage] || STAGES[0];
+      var pr = document.getElementById('main-player-progress');
+      if(pr) pr.textContent = 'Stage ' + (prog.unlockedStage+1) + ' unlocked — ' + stage.icon + ' ' + stage.name;
+    }
+    updatePlayerCards();
+
+    // ─────────────────────────────────────────
+    //  EPIC BACKGROUND MUSIC — Web Audio API
+    //  Adventure / heroic feel for solo mode
+    // ─────────────────────────────────────────
+    let audioCtx = null;
+    let musicPlaying = false;
+    let musicNodes = [];
+    let musicScheduler = null;
+    let nextNoteTime = 0;
+    let noteIndex = 0;
+
+    // Epic adventure melody — minor scale feel, heroic rhythm
+    const MELODY = [
+      392.00, 440.00, 523.25, 493.88, 440.00, 392.00, 349.23, 392.00,
+      440.00, 523.25, 587.33, 523.25, 493.88, 440.00, 392.00, 0,
+      349.23, 392.00, 440.00, 523.25, 493.88, 440.00, 392.00, 349.23,
+      329.63, 349.23, 392.00, 440.00, 523.25, 493.88, 392.00, 0
+    ];
+
+    // Heroic bass countermelody
+    const BASS = [
+      196.00, 0, 261.63, 0, 220.00, 0, 174.61, 0,
+      220.00, 0, 261.63, 0, 246.94, 0, 196.00, 0,
+      174.61, 0, 196.00, 0, 220.00, 0, 261.63, 0,
+      164.81, 0, 174.61, 0, 196.00, 0, 261.63, 0
+    ];
+
+    // Rhythmic accent hits
+    const ACCENT = [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0];
+
+    const NOTE_DUR = 0.20;
+    const LOOK_AHEAD = 0.30;
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, startTime, duration, gainVal, type) {
+      if (!freq || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gn = audioCtx.createGain();
+      const master = audioCtx.createGain();
+      osc.type = type || 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gn.gain.setValueAtTime(0, startTime);
+      gn.gain.linearRampToValueAtTime(gainVal, startTime + 0.02);
+      gn.gain.setValueAtTime(gainVal, startTime + duration * 0.75);
+      gn.gain.linearRampToValueAtTime(0, startTime + duration);
+      master.gain.value = 0.12;
+      osc.connect(gn); gn.connect(master); master.connect(audioCtx.destination);
+      osc.start(startTime); osc.stop(startTime + duration + 0.05);
+      musicNodes.push(osc);
+    }
+
+    function scheduleNotes() {
+      while (nextNoteTime < audioCtx.currentTime + LOOK_AHEAD) {
+        const idx = noteIndex % MELODY.length;
+
+        // melody — square wave for epic retro feel
+        playTone(MELODY[idx], nextNoteTime, NOTE_DUR * 0.8, 0.5, 'square');
+
+        // bass — sawtooth for power
+        playTone(BASS[idx], nextNoteTime, NOTE_DUR * 1.1, 0.35, 'sawtooth');
+
+        // accent percussion
+        if (ACCENT[idx]) {
+          const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.06), audioCtx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+          const src = audioCtx.createBufferSource();
+          const gn = audioCtx.createGain();
+          src.buffer = buf; gn.gain.value = 0.09;
+          src.connect(gn); gn.connect(audioCtx.destination);
+          src.start(nextNoteTime);
+          musicNodes.push(src);
+        }
+
+        nextNoteTime += NOTE_DUR;
+        noteIndex++;
+      }
+    }
+
+    function startMusic() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      nextNoteTime = audioCtx.currentTime + 0.05;
+      noteIndex = 0;
+      musicPlaying = true;
+      musicScheduler = setInterval(scheduleNotes, 50);
+      document.getElementById('music-btn').textContent = '🎵';
+      document.getElementById('music-btn').classList.add('playing');
+    }
+
+    function stopMusic() {
+      musicPlaying = false;
+      if (musicScheduler) { clearInterval(musicScheduler); musicScheduler = null; }
+      musicNodes.forEach(n => { try { n.stop(); } catch(e){} });
+      musicNodes = [];
+      document.getElementById('music-btn').textContent = '🔇';
+      document.getElementById('music-btn').classList.remove('playing');
+    }
+
+    function toggleMusic() {
+      musicPlaying ? stopMusic() : startMusic();
+    }
+
+    function autoStartMusic() {
+      if (!musicPlaying) startMusic();
+    }
+    document.addEventListener('touchstart', autoStartMusic, { once: true });
+    document.addEventListener('click', autoStartMusic, { once: true });
+  </script>
+</body>
+</html>
