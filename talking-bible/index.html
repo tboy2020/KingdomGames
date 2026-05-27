@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>The Talking Bible 📖</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&family=Cinzel:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;min-height:100vh;background:linear-gradient(160deg,#0a0a1a 0%,#1a0a00 60%,#0a0a1a 100%);display:flex;flex-direction:column;align-items:center;color:#fff;overflow-x:hidden}
+
+/* ── STARS BACKGROUND ── */
+.stars-bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle linear infinite}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.9;transform:scale(1.4)}}
+
+/* ── NAV ── */
+.nav-bar{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,210,0,.2)}
+.nav-btn{background:rgba(255,210,0,.15);border:1px solid rgba(255,210,0,.4);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:800;color:#ffd200;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif}
+.nav-title{font-family:'Cinzel',serif;font-size:16px;color:#ffd200;letter-spacing:1px}
+
+/* ── SCREENS ── */
+.screen{width:100%;min-height:100vh;display:none;flex-direction:column;align-items:center;padding:76px 16px 48px;position:relative;z-index:10}
+.screen.active{display:flex}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:1px;padding:13px 30px;border:none;border-radius:50px;cursor:pointer;transition:transform .1s,box-shadow .1s;box-shadow:0 4px 15px rgba(0,0,0,.4)}
+.btn:active{transform:scale(.96)}
+.btn-gold{background:linear-gradient(135deg,#f7971e,#ffd200);color:#1a0e00}
+.btn-dark{background:rgba(255,255,255,.08);border:2px solid rgba(255,210,0,.3);color:#ffd200;font-size:14px;padding:10px 22px}
+.btn-sm{font-size:14px;padding:9px 20px}
+.action-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+
+/* ── PLAYER SELECT ── */
+.p-cards{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
+.p-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.25);border-radius:20px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:border-color .2s,background .2s}
+.p-card:hover{border-color:#ffd200;background:rgba(255,210,0,.08)}
+.p-avatar{font-size:44px;flex-shrink:0}
+.p-name{font-family:'Fredoka One',cursive;font-size:24px;color:#ffd200}
+.p-sub{font-size:13px;color:#888;margin-top:2px}
+.p-stars{font-size:12px;color:#f7971e;margin-top:3px}
+
+/* ── MODE SELECT ── */
+.mode-cards{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
+.mode-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.2);border-radius:20px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:border-color .2s,background .2s}
+.mode-card:hover{border-color:#ffd200;background:rgba(255,210,0,.08)}
+.mode-icon{font-size:44px;flex-shrink:0}
+.mode-title{font-family:'Fredoka One',cursive;font-size:20px;color:#ffd200}
+.mode-desc{font-size:13px;color:#aaa;margin-top:3px;line-height:1.5}
+
+/* ── OPEN BIBLE ── */
+.bible-wrap{position:relative;width:100%;max-width:380px;margin:0 auto}
+.bible-svg-wrap{width:100%;filter:drop-shadow(0 8px 32px rgba(255,210,0,.3))}
+.bible-glow{animation:bibleGlow 3s ease-in-out infinite}
+@keyframes bibleGlow{0%,100%{filter:drop-shadow(0 8px 32px rgba(255,210,0,.25))}50%{filter:drop-shadow(0 8px 48px rgba(255,210,0,.55))}}
+.bible-content{position:absolute;top:12%;left:5%;right:5%;bottom:6%;display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:4px;overflow:hidden;text-align:center}
+
+/* ── MODE 1: WORD SPELL ── */
+.word-title-label{font-family:'Cinzel',serif;font-size:11px;color:#5d3a00;text-transform:uppercase;letter-spacing:2px;text-align:center;font-weight:700}
+.letter-reveal-row{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:6px 0;width:100%}
+.letter-box{width:34px;height:42px;background:rgba(0,0,0,.08);border:2px solid #8B6914;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:19px;font-weight:700;color:#3a2200;transition:all .3s;opacity:0;transform:scale(.7)}
+.letter-box.revealed{opacity:1;transform:scale(1);background:rgba(255,200,0,.25);border-color:#8B6914;box-shadow:0 2px 8px rgba(139,105,20,.3)}
+.letter-box.glowing{background:#ffd200;border-color:#8B6914;color:#3a2200;box-shadow:0 0 16px rgba(255,210,0,.6);animation:letterGlow .6s ease}
+@keyframes letterGlow{0%,100%{box-shadow:0 0 12px rgba(255,210,0,.3)}50%{box-shadow:0 0 30px #ffd200,0 0 60px rgba(255,210,0,.5)}}
+.word-meaning{font-size:11px;color:#3a2200;text-align:center;line-height:1.5;padding:0 6px;font-style:italic;font-weight:700}
+.word-verse{font-family:'Cinzel',serif;font-size:10px;color:#5d3a00;text-align:center;padding:5px 6px;border-top:1px solid #8B6914;margin-top:4px;line-height:1.4;font-weight:600}
+
+/* ── MODE 2: VERSE ── */
+.verse-text-wrap{font-family:'Cinzel',serif;font-size:14px;color:#3a2200;text-align:center;line-height:1.9;padding:4px;font-weight:600}
+.verse-word{display:inline;transition:all .3s;border-radius:4px;padding:1px 3px}
+.verse-word.speaking{color:#8B2200;background:rgba(255,200,0,.5);box-shadow:0 2px 6px rgba(139,34,0,.3);border-radius:3px}
+.verse-ref{font-size:11px;color:#5d3a00;text-align:center;font-style:italic;margin-top:6px;font-weight:700}
+.verse-meaning{font-size:12px;color:#3a2200;text-align:center;line-height:1.6;padding:0 6px;font-style:italic;margin-top:4px;font-weight:700}
+
+/* ── MODE 4: STORY ── */
+.story-emoji-scene{font-size:36px;letter-spacing:8px;text-align:center;margin:6px 0}
+.story-title-big{font-family:'Cinzel',serif;font-size:16px;color:#ffd200;text-align:center;margin-bottom:4px;letter-spacing:1px;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+.story-para{font-size:13px;color:#3a2200;line-height:1.8;text-align:center;padding:0 4px;font-weight:600}
+.story-word-hl{color:#ffd200;font-weight:800}
+.story-progress{display:flex;gap:6px;justify-content:center;margin:6px 0}
+.story-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,210,0,.2);border:1px solid rgba(255,210,0,.3);transition:background .3s}
+.story-dot.done{background:#ffd200}
+.story-dot.active{background:#f7971e;box-shadow:0 0 6px #f7971e}
+
+/* ── QUESTION BOX ── */
+.q-box{width:100%;max-width:380px;background:rgba(255,255,255,.05);border:2px solid rgba(255,210,0,.2);border-radius:18px;padding:16px;margin-top:10px}
+.q-label{font-size:11px;color:#8b6914;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;text-align:center}
+.q-text{font-family:'Fredoka One',cursive;font-size:16px;color:#fff;text-align:center;margin-bottom:12px;line-height:1.4}
+.q-opts{display:flex;flex-direction:column;gap:8px}
+.q-opt{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.2);border-radius:12px;padding:11px 16px;cursor:pointer;font-size:14px;font-weight:700;color:#e0c080;transition:border-color .2s,background .2s;text-align:left}
+.q-opt:hover{border-color:#ffd200;background:rgba(255,210,0,.08)}
+.q-opt.correct{border-color:#4ade80;background:rgba(74,222,128,.1);color:#4ade80}
+.q-opt.wrong{border-color:#f87171;background:rgba(248,113,113,.1);color:#f87171}
+.q-feedback{font-size:13px;font-weight:800;text-align:center;margin-top:8px;min-height:20px}
+.q-feedback.correct{color:#4ade80}
+.q-feedback.wrong{color:#f87171}
+
+/* ── SCORE / PROGRESS ── */
+.progress-bar-wrap{width:100%;max-width:380px}
+.progress-track{background:rgba(255,255,255,.08);border-radius:20px;height:8px;overflow:hidden;margin:4px 0}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#f7971e,#ffd200);transition:width .4s ease}
+.score-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#8b6914;font-weight:700}
+
+/* ── RESULT ── */
+.result-card{width:100%;max-width:380px;background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.3);border-radius:24px;padding:24px 20px;text-align:center}
+.result-icon-big{font-size:64px;animation:resultPop .6s ease}
+@keyframes resultPop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.result-title{font-family:'Cinzel',serif;font-size:24px;color:#ffd200;margin:8px 0}
+.result-stars{font-size:32px;letter-spacing:8px;margin:6px 0}
+.result-verse-box{background:rgba(255,210,0,.08);border-left:4px solid #ffd200;border-radius:0 12px 12px 0;padding:12px 16px;font-family:'Cinzel',serif;font-size:13px;color:#ffd200;font-style:italic;margin-top:12px;text-align:left;line-height:1.6}
+.stat-row{display:flex;gap:12px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.stat-box{background:rgba(255,255,255,.06);border-radius:12px;padding:10px 14px;text-align:center;border:1px solid rgba(255,210,0,.2)}
+.stat-val{font-family:'Fredoka One',cursive;font-size:24px;color:#f7971e}
+.stat-label{font-size:10px;color:#666;text-transform:uppercase}
+
+/* ── AUDIO CONTROLS ── */
+.audio-controls{display:flex;gap:10px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.audio-btn{background:rgba(255,210,0,.12);border:2px solid rgba(255,210,0,.3);border-radius:50px;padding:8px 18px;font-family:'Fredoka One',cursive;font-size:14px;color:#ffd200;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;gap:6px}
+.audio-btn:active{transform:scale(.95)}
+.audio-btn.playing{background:rgba(255,210,0,.25);border-color:#ffd200;animation:audioPulse 1.2s ease-in-out infinite}
+@keyframes audioPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,210,0,.3)}50%{box-shadow:0 0 0 8px rgba(255,210,0,0)}}
+
+/* ── WORD LIST / LIBRARY ── */
+.word-library{width:100%;max-width:380px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.word-chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,210,0,.2);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.word-chip:hover{border-color:#ffd200;background:rgba(255,210,0,.1)}
+.word-chip.done{border-color:#4ade80;background:rgba(74,222,128,.08)}
+.word-chip-text{font-family:'Cinzel',serif;font-size:13px;color:#ffd200;font-weight:600}
+.word-chip-status{font-size:10px;color:#666;margin-top:2px}
+
+/* ── STORY LIST ── */
+.story-list{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px}
+.story-item{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.2);border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.story-item:hover{border-color:#ffd200}
+.story-item-icon{font-size:32px;flex-shrink:0}
+.story-item-title{font-family:'Cinzel',serif;font-size:15px;color:#ffd200}
+.story-item-sub{font-size:12px;color:#666;margin-top:2px}
+.story-item-badge{font-size:20px;margin-left:auto;flex-shrink:0}
+
+/* ── WELCOME BANNER ── */
+.welcome-banner{font-family:'Cinzel',serif;font-size:13px;color:#8b6914;text-align:center;letter-spacing:1px;margin-bottom:8px}
+.section-title{font-family:'Cinzel',serif;font-size:14px;color:#8b6914;text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<!-- STARS -->
+<div class="stars-bg" id="stars-bg"></div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <a class="nav-btn" href="../index.html">👑 Hub</a>
+  <div class="nav-title">📖 The Talking Bible</div>
+  <button class="nav-btn" id="music-btn" onclick="toggleMusic()">🎵</button>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: PLAYER SELECT
+══════════════════════════════ -->
+<div class="screen active" id="screen-player">
+  <div style="font-size:56px;text-align:center;margin-bottom:8px;animation:resultPop .6s ease">📖</div>
+  <div style="font-family:'Cinzel',serif;font-size:22px;color:#ffd200;text-align:center;margin-bottom:4px">The Talking Bible</div>
+  <div class="welcome-banner">God Word — alive and speaking</div>
+  <div style="font-size:14px;color:#666;text-align:center;margin-bottom:20px">Who is listening today? 🙏</div>
+  <div class="p-cards">
+    <div class="p-card" id="tb-main-card" onclick="selectTBPlayer()">
+      <div class="p-avatar" id="tb-main-avatar">🏆</div>
+      <div>
+        <div class="p-name" id="tb-main-name">Loading...</div>
+        <div class="p-sub" id="tb-main-sub">Rising Champion</div>
+        <div class="p-stars" id="tb-main-stars">Tap to start</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: MODE SELECT
+══════════════════════════════ -->
+<div class="screen" id="screen-mode">
+  <div class="welcome-banner" id="mode-welcome">Welcome, Dominion!</div>
+  <div style="font-size:14px;color:#666;text-align:center;margin-bottom:20px">Choose how to hear God Word</div>
+  <div class="mode-cards">
+    <div class="mode-card" onclick="startMode('word')">
+      <div class="mode-icon">✨</div>
+      <div>
+        <div class="mode-title">Living Word</div>
+        <div class="mode-desc">A word appears, spells itself letter by letter, then speaks its meaning and verse.</div>
+      </div>
+    </div>
+    <div class="mode-card" onclick="startMode('verse')">
+      <div class="mode-icon">📜</div>
+      <div>
+        <div class="mode-title">Living Verse</div>
+        <div class="mode-desc">A full Bible verse reads itself aloud, word by word glowing as it speaks.</div>
+      </div>
+    </div>
+    <div class="mode-card" onclick="startMode('story')">
+      <div class="mode-icon">🕊️</div>
+      <div>
+        <div class="mode-title">Living Story</div>
+        <div class="mode-desc">A Bible story narrated aloud with key words highlighted. Answer questions to earn stars!</div>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-dark btn-sm" onclick="showScreen('screen-player')" style="margin-top:10px">← Change Player</button>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: WORD LIBRARY
+══════════════════════════════ -->
+<div class="screen" id="screen-word-library">
+  <div class="section-title">Choose a Word</div>
+  <div class="progress-bar-wrap" style="margin-bottom:12px">
+    <div class="score-row"><span id="wl-done">0 learned</span><span id="wl-total">of 30</span></div>
+    <div class="progress-track"><div class="progress-fill" id="wl-fill" style="width:0%"></div></div>
+  </div>
+  <div class="word-library" id="word-library-grid"></div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" onclick="startRandomWord()">🎲 Surprise Me!</button>
+    <button class="btn btn-dark btn-sm" onclick="showScreen('screen-mode')">← Back</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: LIVING WORD
+══════════════════════════════ -->
+<div class="screen" id="screen-word">
+  <div class="bible-wrap">
+    <div class="bible-svg-wrap bible-glow">
+      <svg viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <!-- Bible cover shadow -->
+        <ellipse cx="170" cy="215" rx="150" ry="8" fill="rgba(0,0,0,.4)"/>
+        <!-- Left page -->
+        <path d="M20 30 Q168 20 168 20 L168 200 Q168 210 158 212 L20 212 Q10 210 10 200 L10 40 Q10 30 20 30Z" fill="#f5f0dc"/>
+        <path d="M20 30 Q168 20 168 20 L168 200 Q168 210 158 212 L20 212 Q10 210 10 200 L10 40 Q10 30 20 30Z" fill="url(#pageGradL)" opacity=".3"/>
+        <!-- Right page -->
+        <path d="M172 20 Q320 20 322 30 L322 200 Q322 210 312 212 L172 212 Q172 210 172 200 Z" fill="#f5f0dc"/>
+        <path d="M172 20 Q320 20 322 30 L322 200 Q322 210 312 212 L172 212 Q172 210 172 200 Z" fill="url(#pageGradR)" opacity=".3"/>
+        <!-- Spine - subtle -->
+        <path d="M165 18 Q170 15 175 18 L175 213 Q170 216 165 213 Z" fill="#c8a840" opacity=".5"/>
+        <path d="M167 20 Q170 18 173 20 L173 212 Q170 214 167 212 Z" fill="#e8c860" opacity=".4"/>
+        <!-- Page lines left -->
+        <line x1="28" y1="55" x2="155" y2="53" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="28" y1="68" x2="155" y2="66" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="28" y1="81" x2="155" y2="79" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="28" y1="94" x2="155" y2="92" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="28" y1="107" x2="155" y2="105" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="28" y1="120" x2="155" y2="118" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <!-- Page lines right -->
+        <line x1="185" y1="55" x2="313" y2="55" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="185" y1="68" x2="313" y2="68" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="185" y1="81" x2="313" y2="81" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="185" y1="94" x2="313" y2="94" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="185" y1="107" x2="313" y2="107" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <line x1="185" y1="120" x2="313" y2="120" stroke="#c8b89a" stroke-width=".8" opacity=".6"/>
+        <!-- Cross on left page -->
+        <line x1="91" y1="140" x2="91" y2="200" stroke="#c8b89a" stroke-width="2.5" opacity=".5"/>
+        <line x1="70" y1="158" x2="112" y2="158" stroke="#c8b89a" stroke-width="2.5" opacity=".5"/>
+        <!-- Bookmark -->
+        <path d="M290 18 L305 18 L305 60 L297.5 52 L290 60 Z" fill="#b71c1c" opacity=".8"/>
+        <defs>
+          <linearGradient id="pageGradL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8B6914"/><stop offset="100%" stop-color="transparent"/></linearGradient>
+          <linearGradient id="pageGradR" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="transparent"/><stop offset="100%" stop-color="#8B6914"/></linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <!-- Bible content overlay -->
+    <div class="bible-content" id="bible-word-content">
+      <div class="word-title-label">The Word</div>
+      <div class="letter-reveal-row" id="letter-row"></div>
+      <div class="word-meaning" id="word-meaning">...</div>
+      <div class="word-verse" id="word-verse">...</div>
+    </div>
+  </div>
+  <div class="audio-controls">
+    <button class="audio-btn" id="spell-btn" onclick="replaySpelling()">🔤 Spell Again</button>
+    <button class="audio-btn" id="read-btn" onclick="replayWord()">🔊 Read Again</button>
+  </div>
+  <div class="q-box" id="word-q-box" style="display:none">
+    <div class="q-label">Question</div>
+    <div class="q-text" id="word-q-text"></div>
+    <div class="q-opts" id="word-q-opts"></div>
+    <div class="q-feedback" id="word-q-feedback"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="word-next-btn" onclick="nextWord()" style="display:none">Next Word →</button>
+    <button class="btn btn-dark btn-sm" onclick="showScreen('screen-word-library')">📚 Word List</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: LIVING VERSE
+══════════════════════════════ -->
+<div class="screen" id="screen-verse">
+  <div class="bible-wrap">
+    <div class="bible-svg-wrap bible-glow">
+      <svg viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <ellipse cx="170" cy="215" rx="150" ry="8" fill="rgba(0,0,0,.4)"/>
+        <path d="M20 30 Q168 20 168 20 L168 200 Q168 210 158 212 L20 212 Q10 210 10 200 L10 40 Q10 30 20 30Z" fill="#f5f0dc"/>
+        <path d="M172 20 Q320 20 322 30 L322 200 Q322 210 312 212 L172 212 Q172 210 172 200 Z" fill="#f5f0dc"/>
+        <path d="M165 18 Q170 15 175 18 L175 213 Q170 216 165 213 Z" fill="#8B6914"/>
+        <path d="M166 20 Q170 17 174 20 L174 212 Q170 215 166 212 Z" fill="#A0791E"/>
+        <text x="91" y="42" font-family="Cinzel" font-size="8" fill="#8B6914" text-anchor="middle" opacity=".7">THE WORD</text>
+        <text x="249" y="42" font-family="Cinzel" font-size="8" fill="#8B6914" text-anchor="middle" opacity=".7">OF GOD</text>
+      </svg>
+    </div>
+    <div class="bible-content">
+      <div class="word-title-label" id="verse-ref-label">— — —</div>
+      <div class="verse-text-wrap" id="verse-text-display">Loading verse...</div>
+      <div class="verse-meaning" id="verse-meaning-text"></div>
+    </div>
+  </div>
+  <div class="audio-controls">
+    <button class="audio-btn" id="verse-play-btn" onclick="playVerseAudio()">▶ Read Aloud</button>
+    <button class="audio-btn" onclick="replayVerse()">🔊 Again</button>
+  </div>
+  <div class="q-box" id="verse-q-box" style="display:none">
+    <div class="q-label">Question</div>
+    <div class="q-text" id="verse-q-text"></div>
+    <div class="q-opts" id="verse-q-opts"></div>
+    <div class="q-feedback" id="verse-q-feedback"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="verse-next-btn" onclick="nextVerse()" style="display:none">Next Verse →</button>
+    <button class="btn btn-dark btn-sm" onclick="startMode('verse')">📜 Verse List</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: STORY LIST
+══════════════════════════════ -->
+<div class="screen" id="screen-story-list">
+  <div class="section-title">Choose a Story</div>
+  <div class="story-list" id="story-list-grid"></div>
+  <button class="btn btn-dark btn-sm" onclick="showScreen('screen-mode')" style="margin-top:10px">← Back</button>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: LIVING STORY
+══════════════════════════════ -->
+<div class="screen" id="screen-story">
+  <div style="width:100%;max-width:380px">
+    <div class="story-title-big" id="story-title-display">Noah</div>
+    <div class="story-progress" id="story-progress-dots"></div>
+  </div>
+  <div class="bible-wrap">
+    <div class="bible-svg-wrap bible-glow">
+      <svg viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <ellipse cx="170" cy="215" rx="150" ry="8" fill="rgba(0,0,0,.4)"/>
+        <path d="M20 30 Q168 20 168 20 L168 200 Q168 210 158 212 L20 212 Q10 210 10 200 L10 40 Q10 30 20 30Z" fill="#f5f0dc"/>
+        <path d="M172 20 Q320 20 322 30 L322 200 Q322 210 312 212 L172 212 Q172 210 172 200 Z" fill="#f5f0dc"/>
+        <path d="M165 18 Q170 15 175 18 L175 213 Q170 216 165 213 Z" fill="#8B6914"/>
+        <path d="M166 20 Q170 17 174 20 L174 212 Q170 215 166 212 Z" fill="#A0791E"/>
+      </svg>
+    </div>
+    <div class="bible-content">
+      <div class="story-emoji-scene" id="story-emojis-display">📖</div>
+      <div class="story-para" id="story-para-display">Loading story...</div>
+    </div>
+  </div>
+  <div class="audio-controls">
+    <button class="audio-btn" id="story-play-btn" onclick="playStoryAudio()">▶ Read Aloud</button>
+    <button class="audio-btn" onclick="replayStory()">🔊 Again</button>
+  </div>
+  <div class="q-box" id="story-q-box" style="display:none">
+    <div class="q-label">Question</div>
+    <div class="q-text" id="story-q-text"></div>
+    <div class="q-opts" id="story-q-opts"></div>
+    <div class="q-feedback" id="story-q-feedback"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold btn-sm" id="story-next-btn" onclick="nextStoryScene()" style="display:none">Next →</button>
+    <button class="btn btn-dark btn-sm" onclick="showScreen('screen-story-list')">📚 Stories</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN: RESULT
+══════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div class="result-card">
+    <div class="result-icon-big" id="res-icon">⭐</div>
+    <div class="result-stars" id="res-stars">⭐⭐⭐</div>
+    <div class="result-title" id="res-title">Well done!</div>
+    <div class="stat-row" id="res-stats"></div>
+    <div class="result-verse-box" id="res-verse"></div>
+  </div>
+  <div class="action-row">
+    <button class="btn btn-gold" onclick="playAgain()">▶ Play Again</button>
+    <button class="btn btn-dark btn-sm" onclick="showScreen('screen-mode')">📖 Modes</button>
+    <button class="btn btn-dark btn-sm" onclick="showScreen('screen-player')">🏠 Home</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  DATA — 30 FAITH WORDS
+// ═══════════════════════════════════════
+const FAITH_WORDS = [
+  {word:'GOD',    meaning:'God is our heavenly Father who created everything and loves us with an everlasting love.',
+   verse:'"For God so loved the world that He gave His only Son." — John 3:16',
+   q:'What does God do for us?',opts:['Loves us always','Lives far away','Only talks to adults','Gets angry easily'],ans:0},
+
+  {word:'LOVE',   meaning:'Love is the greatest gift. God loved us first — before we even knew Him!',
+   verse:'"God is love, and whoever abides in love abides in God." — 1 John 4:16',
+   q:'Who loved us first?',opts:['Our parents','Ourselves','God','Our friends'],ans:2},
+
+  {word:'GRACE',  meaning:'Grace means God gives us kindness and forgiveness that we do not deserve. It is a free gift!',
+   verse:'"For it is by grace you have been saved, through faith." — Ephesians 2:8',
+   q:'What is grace?',opts:['A type of food','A girls name only','God free gift of kindness','A game we play'],ans:2},
+
+  {word:'FAITH',  meaning:'Faith means believing in God even when you cannot see Him — trusting His promises are true.',
+   verse:'"Faith is confidence in what we hope for and assurance about what we do not see." — Hebrews 11:1',
+   q:'What is faith?',opts:['Seeing with your eyes','Trusting God even when you cannot see','A feeling of sadness','Doing things alone'],ans:1},
+
+  {word:'PEACE',  meaning:'Peace is a calm feeling in your heart that comes from God. It stays even when things are hard.',
+   verse:'"The peace of God, which surpasses all understanding, will guard your hearts." — Philippians 4:7',
+   q:'Where does true peace come from?',opts:['From sleeping','From eating','From God','From playing'],ans:2},
+
+  {word:'HOPE',   meaning:'Hope means knowing that good things are coming because God has promised them. It never disappoints!',
+   verse:'"May the God of hope fill you with all joy and peace as you trust in Him." — Romans 15:13',
+   q:'What does hope mean?',opts:['Wishing for something impossible','Trusting God promises for good things','Being worried','Not believing'],ans:1},
+
+  {word:'JOY',    meaning:'Joy is a deep happiness that lives in your heart and stays even on hard days. Jesus gives real joy!',
+   verse:'"The joy of the Lord is your strength." — Nehemiah 8:10',
+   q:'What gives us real joy?',opts:['Toys and games','The Lord','Eating sweets','Watching TV'],ans:1},
+
+  {word:'TRUTH',  meaning:'Truth means what is real and right. God never lies — every word He says is completely true!',
+   verse:'"Your word is truth." — John 17:17',
+   q:'Is everything God says true?',opts:['Sometimes','Only in the Bible','Always — He never lies','Only when easy'],ans:2},
+
+  {word:'MERCY',  meaning:'Mercy means God chooses not to punish us when we do wrong. He is kind and full of compassion.',
+   verse:'"The Lord is gracious and compassionate, slow to anger and rich in love." — Psalm 145:8',
+   q:'What is mercy?',opts:['Being strict','Punishing people','God choosing to forgive us','A type of prayer'],ans:2},
+
+  {word:'PRAY',   meaning:'Prayer is talking to God. He always hears us — day or night, big or small, He listens!',
+   verse:'"Do not be anxious about anything, but in everything by prayer present your requests to God." — Philippians 4:6',
+   q:'What is prayer?',opts:['Talking to your friends','Talking to God','Reading the Bible','Going to church'],ans:1},
+
+  {word:'HOLY',   meaning:'Holy means set apart for God — clean, pure and belonging to Him. God is perfectly holy!',
+   verse:'"Be holy, because I am holy." — 1 Peter 1:16',
+   q:'What does holy mean?',opts:['Old and dusty','Set apart and pure for God','Very loud','A type of music'],ans:1},
+
+  {word:'SAVED',  meaning:'To be saved means Jesus rescued us from sin and gave us eternal life. We are safe in His hands!',
+   verse:'"For God did not send His Son to condemn the world, but to save the world through Him." — John 3:17',
+   q:'Who saves us?',opts:['A superhero','Our parents','Jesus','Our teacher'],ans:2},
+
+  {word:'RISEN',  meaning:'Risen means Jesus came back to life after He died on the cross. He is alive today!',
+   verse:'"He is not here; He has risen, just as He said." — Matthew 28:6',
+   q:'What does risen mean?',opts:['Went to sleep','Came back to life','Flew away','Got taller'],ans:1},
+
+  {word:'LIGHT',  meaning:'Light means Jesus is the Light of the world. He shines in the darkness and guides our path!',
+   verse:'"I am the light of the world. Whoever follows me will never walk in darkness." — John 8:12',
+   q:'Who is the Light of the world?',opts:['The sun','The moon','Jesus','A candle'],ans:2},
+
+  {word:'WORD',   meaning:'The Word is the Bible — God message to us. Jesus is also called the Word of God!',
+   verse:'"In the beginning was the Word, and the Word was with God, and the Word was God." — John 1:1',
+   q:'What is the Word of God?',opts:['A dictionary','The Bible — God message','A history book','A fairy tale'],ans:1},
+
+  {word:'KING',   meaning:'Jesus is the King of kings! He rules over everything with love, justice and perfect power.',
+   verse:'"He is Lord of lords and King of kings." — Revelation 17:14',
+   q:'What is Jesus called?',opts:['President','Teacher only','King of kings','Prince of peace only'],ans:2},
+
+  {word:'LAMB',   meaning:'Jesus is called the Lamb of God. He gave His life for us like a sacrifice, taking away our sins.',
+   verse:'"Behold, the Lamb of God, who takes away the sin of the world!" — John 1:29',
+   q:'Why is Jesus called the Lamb of God?',opts:['He liked animals','He gave His life for our sins','He was gentle only','He lived on a farm'],ans:1},
+
+  {word:'CROSS',  meaning:'The cross is where Jesus died for our sins. It is the greatest act of love the world has ever seen.',
+   verse:'"By His wounds we are healed." — Isaiah 53:5',
+   q:'What happened at the cross?',opts:['Jesus played','Jesus taught','Jesus died for our sins','Jesus slept'],ans:2},
+
+  {word:'BLESS',  meaning:'To bless means God pours His goodness, favour and protection over your life. You are blessed!',
+   verse:'"The Lord bless you and keep you; the Lord make His face shine on you." — Numbers 6:24-25',
+   q:'What does it mean to be blessed?',opts:['To be very rich','To have God goodness poured on your life','To be famous','To be tall'],ans:1},
+
+  {word:'TRUST',  meaning:'Trust means putting all your confidence in God — knowing He will never let you down or leave you.',
+   verse:'"Trust in the Lord with all your heart and lean not on your own understanding." — Proverbs 3:5',
+   q:'Who should we trust with all our heart?',opts:['Only ourselves','Our best friends','The Lord','Our teachers'],ans:2},
+
+  {word:'POWER',  meaning:'God has all power — over sickness, storms, darkness and death. Nothing is too hard for Him!',
+   verse:'"With God all things are possible." — Matthew 19:26',
+   q:'Is anything too hard for God?',opts:['Yes, many things','Only big things','No — all things are possible with God','Sometimes'],ans:2},
+
+  {word:'GLORY',  meaning:'Glory means the greatness, brightness and majesty of God. His glory fills heaven and earth!',
+   verse:'"The heavens declare the glory of God; the skies proclaim the work of His hands." — Psalm 19:1',
+   q:'What declares the glory of God?',opts:['Only churches','The heavens and skies','Only singing','Only prayer'],ans:1},
+
+  {word:'PRAISE', meaning:'Praise means telling God how wonderful He is — with your voice, your heart and your whole life!',
+   verse:'"Let everything that has breath praise the Lord!" — Psalm 150:6',
+   q:'Who should praise the Lord?',opts:['Only adults','Only singers','Everything that breathes','Only on Sundays'],ans:2},
+
+  {word:'CROWN',  meaning:'A crown is a symbol of victory. Jesus gives a crown of life to all who love and follow Him!',
+   verse:'"Be faithful, even to the point of death, and I will give you the crown of life." — Revelation 2:10',
+   q:'What does Jesus give to those who are faithful?',opts:['A crown of life','Gold and silver','A big house','A new name'],ans:0},
+
+  {word:'SHIELD', meaning:'God is our shield — He protects us from all harm. We are always safe in His care!',
+   verse:'"The Lord is my strength and my shield; my heart trusts in Him, and He helps me." — Psalm 28:7',
+   q:'What does God do for us like a shield?',opts:['Teaches us','Feeds us','Protects us from harm','Makes us fast'],ans:2},
+
+  {word:'FREE',   meaning:'Jesus set us free from sin, fear and shame. We are free to love God and live His way!',
+   verse:'"So if the Son sets you free, you will be free indeed." — John 8:36',
+   q:'Who sets us truly free?',opts:['A good teacher','The Son of God — Jesus','Our parents','Our own strength'],ans:1},
+
+  {word:'ABIDE',  meaning:'Abide means to stay close to Jesus every day — talking to Him, reading His Word and obeying Him.',
+   verse:'"Abide in me, and I in you. As the branch cannot bear fruit unless it abides in the vine." — John 15:4',
+   q:'What does abide mean?',opts:['Run away fast','Stay close to Jesus','Forget about God','Only pray on Sundays'],ans:1},
+
+  {word:'BORN',   meaning:'Jesus said we must be born again — a new birth of the Spirit that makes us children of God!',
+   verse:'"You must be born again." — John 3:7',
+   q:'What did Jesus say we must do?',opts:['Grow very tall','Be born again in the Spirit','Study very hard','Travel far away'],ans:1},
+
+  {word:'LIFE',   meaning:'Jesus came to give us life — full, rich, overflowing life. Not just surviving but truly living for God!',
+   verse:'"I have come that they may have life, and have it to the full." — John 10:10',
+   q:'Why did Jesus come?',opts:['To judge us','To give us full life','To build churches','To write books'],ans:1},
+
+  {word:'CHOSEN', meaning:'You are chosen by God! Before you were born He knew you, loved you and called you for a purpose.',
+   verse:'"You did not choose me, but I chose you." — John 15:16',
+   q:'Who chose us?',opts:['We chose God first','Our parents chose us','God chose us','Our church chose us'],ans:2},
+];
+
+// ═══════════════════════════════════════
+//  DATA — VERSES (Mode 2)
+// ═══════════════════════════════════════
+const VERSES = [
+  {ref:'John 3:16',
+   text:'For God so loved the world that He gave His one and only Son, that whoever believes in Him shall not perish but have eternal life.',
+   meaning:'This is the most famous verse in the Bible — it tells us that God loves every person so much that He sent Jesus to save us.',
+   q:'What did God give because He loves the world?',opts:['Angels','His only Son','The Bible','A rainbow'],ans:1},
+
+  {ref:'Philippians 4:13',
+   text:'I can do all this through Him who gives me strength.',
+   meaning:'Paul wrote this in prison! He was saying that no matter what happens, Jesus gives us the strength to face anything.',
+   q:'Who gives us strength to do all things?',opts:['Ourselves','Our friends','Jesus','Food'],ans:2},
+
+  {ref:'Joshua 1:9',
+   text:'Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.',
+   meaning:'God said this to Joshua when he had to lead the whole nation of Israel. God promises to always be with us too!',
+   q:'Does God promise to be with us?',opts:['Only sometimes','Only in church','Yes — wherever we go','Only when we are good'],ans:2},
+
+  {ref:'Psalm 23:1',
+   text:'The Lord is my shepherd, I lack nothing.',
+   meaning:'King David wrote this. He compared God to a shepherd who takes such good care of his sheep that they need nothing.',
+   q:'What does a shepherd do for his sheep?',opts:['Ignores them','Takes such good care they need nothing','Only feeds them','Leaves them alone'],ans:1},
+
+  {ref:'Proverbs 3:5',
+   text:'Trust in the Lord with all your heart and lean not on your own understanding.',
+   meaning:'This means we should trust God completely — even when we do not understand what is happening in our lives.',
+   q:'What should we trust God with?',opts:['Part of our heart','Only big problems','All of our heart','Only when scared'],ans:2},
+
+  {ref:'Romans 8:28',
+   text:'And we know that in all things God works for the good of those who love Him, who have been called according to His purpose.',
+   meaning:'This is a wonderful promise — God takes everything in our lives, even hard things, and works it all together for good!',
+   q:'What does God work together for good?',opts:['Only the easy things','Only good things','All things for those who love Him','Only our prayers'],ans:2},
+
+  {ref:'Isaiah 40:31',
+   text:'But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary.',
+   meaning:'When we put our hope and trust in God, He gives us fresh energy and strength — like an eagle soaring high above!',
+   q:'What happens when we hope in the Lord?',opts:['We get tired','We renew our strength','We sleep better','We eat more'],ans:1},
+
+  {ref:'Jeremiah 29:11',
+   text:'For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.',
+   meaning:'God has amazing plans for your life — plans for good things, not bad. He has a wonderful future planned just for you!',
+   q:'What kind of plans does God have for us?',opts:['Plans to harm us','Plans to test us only','Plans for good — hope and a future','Plans for sadness'],ans:2},
+
+  {ref:'1 John 4:8',
+   text:'Whoever does not love does not know God, because God is love.',
+   meaning:'This tells us something amazing about God very nature — He is not just loving, He IS love itself! Love comes from God.',
+   q:'What is God very nature?',opts:['Power only','Knowledge only','Love itself','Strictness'],ans:2},
+
+  {ref:'Matthew 19:26',
+   text:'Jesus looked at them and said, with man this is impossible, but with God all things are possible.',
+   meaning:'Jesus said this when people thought something was too hard. Nothing is impossible when God is involved!',
+   q:'With God, what is possible?',opts:['Some things','Only miracles','Nothing extra','All things'],ans:3},
+];
+
+// ═══════════════════════════════════════
+//  DATA — STORIES (Mode 4)
+// ═══════════════════════════════════════
+const STORIES = [
+  {
+    id:0, icon:'🚢', title:'Noah and the Ark',
+    scenes:[
+      {emojis:'🌧️🔨🪵',
+       text:'God looked at the world and saw that people were living in wickedness. It made His heart sad. But there was one man named Noah who loved God and walked faithfully with Him. God said to Noah: "I am going to send a great flood. But I will save you and your family. Build a large boat called an Ark."',
+       keywords:['Noah','wickedness','faithful','flood','Ark'],
+       q:'Why did God choose Noah?',opts:['He was the strongest man','He was the richest man','He loved God and walked faithfully with Him','He built boats before'],ans:2},
+      {emojis:'🦒🐘🕊️',
+       text:'Noah obeyed God completely. He built the Ark exactly as God said — even though it had never rained before! God told Noah to bring two of every kind of animal into the Ark. Noah whole family went in. Then God Himself shut the door. Rain fell for forty days and forty nights.',
+       keywords:['obeyed','animals','family','forty','rain'],
+       q:'How many days did it rain?',opts:['Seven days','Twenty days','Forty days and nights','One hundred days'],ans:2},
+      {emojis:'🌈☀️🙏',
+       text:'After the flood, the waters slowly dried up. The Ark rested on Mount Ararat. Noah sent out a dove which came back with an olive leaf — a sign that dry land had appeared! Noah family came out of the Ark and worshipped God. God put a beautiful rainbow in the sky as a promise — He would never flood the whole earth again.',
+       keywords:['dove','olive','rainbow','promise','worship'],
+       q:'What did God put in the sky as His promise?',opts:['The sun','A star','A rainbow','Clouds'],ans:2,
+       verse:'"I have set my rainbow in the clouds as a sign of the covenant between me and the earth." — Genesis 9:13'},
+    ],
+    questions:[
+      {q:'What did God promise with the rainbow?',opts:['More rain','Never to flood the whole earth again','To make Noah a king','To give Noah treasure'],ans:1},
+      {q:'What did Noah do when he left the Ark?',opts:['Built a house','Went fishing','Worshipped God','Ate a big meal'],ans:2},
+    ]
+  },
+  {
+    id:1, icon:'🗿', title:'David and Goliath',
+    scenes:[
+      {emojis:'🐑👦🌄',
+       text:'David was a young shepherd boy who loved God with all his heart. Every day he watched over his father sheep in the hills. While his big brothers were soldiers in the army of King Saul, David stayed behind caring for the sheep. But God was with David and was preparing him for something great.',
+       keywords:['David','shepherd','God','army','preparing'],
+       q:'What did young David do every day?',opts:['Trained as a soldier','Watched over sheep as a shepherd','Studied at school','Worked in the palace'],ans:1},
+      {emojis:'🗿⚔️😱',
+       text:'The Philistine army had a giant soldier named Goliath. He was over nine feet tall! Every day Goliath would shout: "Choose a man to fight me! If he wins, we will serve you. If I win, you will serve us!" The whole army of Israel was terrified. Nobody dared to fight the giant.',
+       keywords:['Goliath','giant','terrified','fight','challenge'],
+       q:'Why was everyone afraid of Goliath?',opts:['He was very loud','He was a giant over nine feet tall','He had a large army','He had special powers'],ans:1},
+      {emojis:'🏹💥🏆',
+       text:'David arrived at the camp with food for his brothers. When he heard Goliath mocking God army, David was not afraid! He said: "The Lord who saved me from the lion and the bear will save me from this giant too!" David picked up five smooth stones from a stream. With one stone in his sling, he ran toward Goliath. The stone struck the giant and Goliath fell. David won with God help!',
+       keywords:['stones','sling','Lord','victory','fell'],
+       q:'How did David defeat Goliath?',opts:['With a sword','With a sling and one stone with God help','By calling for more soldiers','By tricking the giant'],ans:1,
+       verse:'"The battle belongs to the Lord." — 1 Samuel 17:47'},
+    ],
+    questions:[
+      {q:'What did David trust in when facing Goliath?',opts:['His own strength','His big brothers','The Lord who saved him before','His sword'],ans:2},
+      {q:'What can we learn from David?',opts:['Giants always win','We should run away from problems','With God we can face any challenge','We need a big army to win'],ans:2},
+    ]
+  },
+  {
+    id:2, icon:'✝️', title:'Jesus — The Good Shepherd',
+    scenes:[
+      {emojis:'🐑🌿👑',
+       text:'Jesus told a beautiful story about a shepherd who had one hundred sheep. One day he counted them and found that one sheep was missing! The shepherd left the ninety-nine safe sheep and went out to search for the one that was lost. He searched through mountains and valleys until he found it.',
+       keywords:['shepherd','hundred','missing','search','lost'],
+       q:'How many sheep were lost?',opts:['Ten','All of them','One sheep out of a hundred','Five'],ans:2},
+      {emojis:'🎉❤️🙌',
+       text:'When the shepherd found the lost sheep, he was so filled with joy! He picked it up gently and carried it home on his shoulders. Then he called all his friends and neighbours together and said: "Celebrate with me! I have found my lost sheep!" Jesus said there is great joy in heaven when one lost person comes back to God.',
+       keywords:['joy','carried','celebrate','found','heaven'],
+       q:'What did the shepherd do when he found the sheep?',opts:['Was angry','Carried it home with great joy','Left it there','Sold it'],ans:1},
+      {emojis:'🙏💚🌟',
+       text:'Jesus said: "I am the Good Shepherd. I know my sheep and my sheep know me. I lay down my life for the sheep." Jesus is our Good Shepherd. He knows your name. He knows everything about you. He left heaven to come and find you — and He loves you so much He gave His life for you.',
+       keywords:['Good Shepherd','know','life','loves','name'],
+       q:'What does Jesus call Himself in this story?',opts:['The King','The Good Shepherd','The Teacher','The Builder'],ans:1,
+       verse:'"I am the good shepherd. The good shepherd lays down his life for the sheep." — John 10:11'},
+    ],
+    questions:[
+      {q:'What does this story tell us about God?',opts:['God only cares about big groups','God does not notice when we are lost','God searches for every single person who is lost','God has too many people to care about one person'],ans:2},
+      {q:'How does Jesus know His sheep?',opts:['By their size','He knows each one by name','By their colour','He does not know them'],ans:1},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let currentPlayer = 'dominion';
+let currentMode = '';
+let currentWordIdx = 0;
+let currentVerseIdx = 0;
+let currentStoryId = 0;
+let currentSceneIdx = 0;
+let wordAnswered = false, verseAnswered = false, storyAnswered = false;
+let score = 0, totalQ = 0, correctQ = 0;
+let lastMode = '';
+
+function loadSave(p){
+  try{
+    if(typeof localStorage==='undefined') return {wordsLearned:[],versesLearned:[],storiesComplete:[],stars:0};
+    const r=localStorage.getItem('talkbible_'+p);
+    if(!r) return {wordsLearned:[],versesLearned:[],storiesComplete:[],stars:0};
+    return JSON.parse(r);
+  }catch(e){
+    return {wordsLearned:[],versesLearned:[],storiesComplete:[],stars:0};
+  }
+}
+function saveSave(p,d){ try{localStorage.setItem('talkbible_'+p,JSON.stringify(d));}catch(e){} }
+
+// ═══════════════════════════════════════
+//  STARS BACKGROUND
+// ═══════════════════════════════════════
+function buildStars(){
+  const bg=document.getElementById('stars-bg');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()*3+1;
+    s.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    bg.appendChild(s);
+  }
+}
+
+// ═══════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function refreshPlayerCards(){
+  try {
+    ['dominion','anu'].forEach(function(p){
+      var save=loadSave(p);
+      var el=document.getElementById(p+'-bible-stars');
+      if(!el) return;
+      var stars=save.stars||0;
+      var words=(save.wordsLearned&&save.wordsLearned.length)||0;
+      var starCount=Math.min(5,Math.floor(stars/3));
+      var starStr='';
+      for(var i=0;i<starCount;i++) starStr+='*';
+      el.textContent=(starCount>0?starStr:'Just starting')+' - '+words+' words learned';
+    });
+  } catch(e) { console.log('refreshPlayerCards error:',e); }
+}
+
+function selectTBPlayer(){
+  var kkRaw = null;
+  try { kkRaw = localStorage.getItem('kk_profile'); } catch(e){}
+  var kkProf = kkRaw ? JSON.parse(kkRaw) : null;
+  var name = kkProf ? kkProf.name : 'Friend';
+  var isEasy = kkProf ? (kkProf.isEasy || kkProf.age <= 6) : false;
+  currentPlayer = isEasy ? 'anu' : 'dominion';
+  score=0;totalQ=0;correctQ=0;
+  document.getElementById('mode-welcome').textContent='Welcome, ' + name + '! 🙏';
+  showScreen('screen-mode');
+  if(isEasy) speak('Welcome to the Talking Bible! Let us hear God Word together.');
+}
+function selectPlayer(p){
+  currentPlayer=p;
+  score=0;totalQ=0;correctQ=0;
+  var kkRaw = null;
+  try { kkRaw = localStorage.getItem('kk_profile'); } catch(e){}
+  var kkProf = kkRaw ? JSON.parse(kkRaw) : null;
+  var name = kkProf ? kkProf.name : (p==='dominion'?'Champion':'Star');
+  document.getElementById('mode-welcome').textContent='Welcome, ' + name + '! 🙏';
+  showScreen('screen-mode');
+  if(p==='anu') speak('Welcome to the Talking Bible! Let us hear God Word together.');
+}
+
+function startMode(mode){
+  currentMode=mode;lastMode=mode;
+  score=0;totalQ=0;correctQ=0;
+  if(mode==='word'){
+    buildWordLibrary();
+    showScreen('screen-word-library');
+  } else if(mode==='verse'){
+    currentVerseIdx=Math.floor(Math.random()*VERSES.length);
+    loadVerse();
+    showScreen('screen-verse');
+  } else if(mode==='story'){
+    buildStoryList();
+    showScreen('screen-story-list');
+  }
+}
+
+function playAgain(){ startMode(lastMode); }
+
+// ═══════════════════════════════════════
+//  MODE 1 — LIVING WORD
+// ═══════════════════════════════════════
+function buildWordLibrary(){
+  const save=loadSave(currentPlayer);
+  const grid=document.getElementById('word-library-grid');
+  grid.innerHTML='';
+  const learned=save.wordsLearned||[];
+  let doneCount=0;
+  FAITH_WORDS.forEach((fw,i)=>{
+    const done=learned.includes(fw.word);
+    if(done) doneCount++;
+    const div=document.createElement('div');
+    div.className='word-chip'+(done?' done':'');
+    div.innerHTML=`<div class="word-chip-text">${fw.word}</div><div class="word-chip-status">${done?'✅ Learned':'Tap to learn'}</div>`;
+    div.onclick=()=>loadWord(i);
+    grid.appendChild(div);
+  });
+  document.getElementById('wl-done').textContent=doneCount+' learned';
+  document.getElementById('wl-total').textContent='of '+FAITH_WORDS.length;
+  document.getElementById('wl-fill').style.width=Math.round(doneCount/FAITH_WORDS.length*100)+'%';
+}
+
+function startRandomWord(){
+  const save=loadSave(currentPlayer);
+  const learned=save.wordsLearned||[];
+  const unlearned=FAITH_WORDS.map((_,i)=>i).filter(i=>!learned.includes(FAITH_WORDS[i].word));
+  const idx=unlearned.length>0?unlearned[Math.floor(Math.random()*unlearned.length)]:Math.floor(Math.random()*FAITH_WORDS.length);
+  loadWord(idx);
+}
+
+function loadWord(idx){
+  currentWordIdx=idx;
+  wordAnswered=false;
+  const fw=FAITH_WORDS[idx];
+  document.getElementById('word-q-box').style.display='none';
+  document.getElementById('word-next-btn').style.display='none';
+  document.getElementById('word-q-feedback').textContent='';
+  document.getElementById('word-meaning').textContent='';
+  document.getElementById('word-verse').textContent='';
+  buildLetterRow(fw.word);
+  showScreen('screen-word');
+  setTimeout(()=>spellWord(fw),600);
+}
+
+function buildLetterRow(word){
+  const row=document.getElementById('letter-row');
+  row.innerHTML='';
+  word.split('').forEach((l,i)=>{
+    const div=document.createElement('div');
+    div.className='letter-box';
+    div.id='lb-'+i;
+    div.textContent=l;
+    row.appendChild(div);
+  });
+}
+
+function spellWord(fw){
+  const letters=fw.word.split('');
+  speak('The word is... '+fw.word.toLowerCase()+'. Listen carefully.');
+  setTimeout(()=>{
+    // Spell letter by letter
+    let delay=800;
+    letters.forEach((l,i)=>{
+      setTimeout(()=>{
+        const box=document.getElementById('lb-'+i);
+        if(box){
+          box.classList.add('revealed');
+          speak(l.toLowerCase());  // lowercase avoids 'capital X' being said
+          // Last letter
+          if(i===letters.length-1){
+            setTimeout(()=>{
+              // All glow
+              letters.forEach((_,j)=>{
+                const b=document.getElementById('lb-'+j);
+                if(b) b.classList.add('glowing');
+              });
+              // Say full word
+              speak(fw.word.toLowerCase());
+              setTimeout(()=>{
+                // Show meaning
+                document.getElementById('word-meaning').textContent=fw.meaning;
+                speak(fw.meaning);
+                setTimeout(()=>{
+                  document.getElementById('word-verse').textContent=fw.verse;
+                  speak(fw.verse);
+                  setTimeout(()=>showWordQuestion(fw), 2500);
+                },2800);
+              },1000);
+            },400);
+          }
+        }
+      }, delay);
+      delay+=currentPlayer==='anu'?700:500;
+    });
+  },800);
+}
+
+function readQuestionAloud(question, opts) {
+  if(!window.speechSynthesis) return;
+  // Read question then each option with a label
+  var fullText = question + '. ';
+  var labels = ['Option A. ', 'Option B. ', 'Option C. ', 'Option D. '];
+  opts.forEach(function(opt, i) {
+    fullText += labels[i] + opt + '. ';
+  });
+  speak(fullText, currentPlayer==='anu' ? 0.88 : 0.95);
+}
+
+function showWordQuestion(fw){
+  document.getElementById('word-q-text').textContent=fw.q;
+  const opts=document.getElementById('word-q-opts');
+  opts.innerHTML='';
+  fw.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';
+    btn.textContent=opt;
+    btn.onclick=()=>answerWordQ(i,fw);
+    opts.appendChild(btn);
+  });
+  document.getElementById('word-q-box').style.display='block';
+  totalQ++;
+  // Read question and options aloud for Anu (slight delay so display renders first)
+  var numOpts = currentPlayer==='anu' ? 2 : 4;
+  setTimeout(function(){
+    readQuestionAloud(fw.q, fw.opts.slice(0, numOpts));
+  }, 800);
+}
+
+function answerWordQ(i,fw){
+  if(wordAnswered) return;
+  wordAnswered=true;
+  const btns=document.querySelectorAll('#word-q-opts .q-opt');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const fb=document.getElementById('word-q-feedback');
+  if(i===fw.ans){
+    btns[i].classList.add('correct');
+    fb.textContent='✅ Well done! That is correct!';
+    fb.className='q-feedback correct';
+    correctQ++;score+=10;
+    if(currentPlayer==='anu') speak('Amazing! You got it right!');
+    // Mark word as learned
+    const save=loadSave(currentPlayer);
+    if(!save.wordsLearned) save.wordsLearned=[];
+    if(!save.wordsLearned.includes(fw.word)){
+      save.wordsLearned.push(fw.word);
+      save.stars=(save.stars||0)+1;
+    }
+    saveSave(currentPlayer,save);
+  } else {
+    btns[i].classList.add('wrong');
+    btns[fw.ans].classList.add('correct');
+    fb.textContent='❌ The answer is: '+fw.opts[fw.ans];
+    fb.className='q-feedback wrong';
+    if(currentPlayer==='anu') speak('Not quite! The answer is '+fw.opts[fw.ans]);
+  }
+  document.getElementById('word-next-btn').style.display='inline-block';
+}
+
+function nextWord(){
+  const next=(currentWordIdx+1)%FAITH_WORDS.length;
+  loadWord(next);
+}
+
+function replaySpelling(){ loadWord(currentWordIdx); }
+function replayWord(){ speak(FAITH_WORDS[currentWordIdx].word.toLowerCase()+'. '+FAITH_WORDS[currentWordIdx].meaning); }
+
+// ═══════════════════════════════════════
+//  MODE 2 — LIVING VERSE
+// ═══════════════════════════════════════
+let verseHighlightTimer=null;
+
+function loadVerse(){
+  verseAnswered=false;
+  const v=VERSES[currentVerseIdx];
+  document.getElementById('verse-ref-label').textContent='— '+v.ref+' —';
+  document.getElementById('verse-q-box').style.display='none';
+  document.getElementById('verse-next-btn').style.display='none';
+  document.getElementById('verse-q-feedback').textContent='';
+  document.getElementById('verse-meaning-text').textContent='';
+
+  // Build word spans
+  const display=document.getElementById('verse-text-display');
+  display.innerHTML='';
+  v.text.split(' ').forEach((word,i)=>{
+    const span=document.createElement('span');
+    span.className='verse-word';
+    span.id='vw-'+i;
+    span.textContent=word+' ';
+    display.appendChild(span);
+  });
+
+  setTimeout(()=>playVerseAudio(),800);
+}
+
+function playVerseAudio(){
+  const v=VERSES[currentVerseIdx];
+  const words=v.text.split(' ');
+  speak(v.text);
+
+  // Highlight words as spoken (approximate timing)
+  if(verseHighlightTimer) clearTimeout(verseHighlightTimer);
+  let delay=400;
+  words.forEach((word,i)=>{
+    setTimeout(()=>{
+      document.querySelectorAll('.verse-word').forEach(s=>s.classList.remove('speaking'));
+      const el=document.getElementById('vw-'+i);
+      if(el) el.classList.add('speaking');
+      if(i===words.length-1){
+        setTimeout(()=>{
+          document.querySelectorAll('.verse-word').forEach(s=>s.classList.remove('speaking'));
+          document.getElementById('verse-meaning-text').textContent=v.meaning;
+          if(currentPlayer==='anu') speak(v.meaning);
+          setTimeout(()=>showVerseQuestion(v),currentPlayer==='anu'?3000:2000);
+        },600);
+      }
+    },delay);
+    delay+=currentPlayer==='anu'?550:400;
+  });
+}
+
+function replayVerse(){ loadVerse(); }
+
+function showVerseQuestion(v){
+  document.getElementById('verse-q-text').textContent=v.q;
+  const opts=document.getElementById('verse-q-opts');
+  opts.innerHTML='';
+  // Anu gets 2 choices, Dominion gets all 4
+  const numOpts=currentPlayer==='anu'?2:4;
+  const displayOpts=v.opts.slice(0,numOpts);
+  const correctAns=v.ans<numOpts?v.ans:0;
+  displayOpts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';
+    btn.textContent=opt;
+    btn.onclick=()=>answerVerseQ(i,correctAns,v);
+    opts.appendChild(btn);
+  });
+  document.getElementById('verse-q-box').style.display='block';
+  totalQ++;
+  var numOpts2 = currentPlayer==='anu' ? 2 : 4;
+  setTimeout(function(){
+    readQuestionAloud(v.q, v.opts.slice(0, numOpts2));
+  }, 800);
+}
+
+function answerVerseQ(i,ans,v){
+  if(verseAnswered) return;
+  verseAnswered=true;
+  const btns=document.querySelectorAll('#verse-q-opts .q-opt');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const fb=document.getElementById('verse-q-feedback');
+  if(i===ans){
+    btns[i].classList.add('correct');
+    fb.textContent='✅ Correct! Wonderful!';
+    fb.className='q-feedback correct';
+    correctQ++;score+=15;
+    if(currentPlayer==='anu') speak('You got it! Wonderful!');
+    const save=loadSave(currentPlayer);
+    if(!save.versesLearned) save.versesLearned=[];
+    if(!save.versesLearned.includes(v.ref)){save.versesLearned.push(v.ref);save.stars=(save.stars||0)+2;}
+    saveSave(currentPlayer,save);
+  } else {
+    btns[i].classList.add('wrong');
+    if(btns[ans]) btns[ans].classList.add('correct');
+    fb.textContent='❌ The answer is: '+v.opts[ans];
+    fb.className='q-feedback wrong';
+    if(currentPlayer==='anu') speak('Not quite. The answer is '+v.opts[ans]);
+  }
+  document.getElementById('verse-next-btn').style.display='inline-block';
+}
+
+function nextVerse(){
+  currentVerseIdx=(currentVerseIdx+1)%VERSES.length;
+  loadVerse();
+}
+
+// ═══════════════════════════════════════
+//  MODE 4 — LIVING STORY
+// ═══════════════════════════════════════
+function buildStoryList(){
+  const save=loadSave(currentPlayer);
+  const grid=document.getElementById('story-list-grid');
+  grid.innerHTML='';
+  STORIES.forEach((s,i)=>{
+    const done=(save.storiesComplete||[]).includes(s.id);
+    const div=document.createElement('div');
+    div.className='story-item';
+    div.innerHTML=`<div class="story-item-icon">${s.icon}</div>
+      <div><div class="story-item-title">${s.title}</div>
+      <div class="story-item-sub">${s.scenes.length} scenes · ${s.questions.length} questions</div></div>
+      <div class="story-item-badge">${done?'✅':'▶'}</div>`;
+    div.onclick=()=>loadStory(i);
+    grid.appendChild(div);
+  });
+}
+
+function loadStory(storyId){
+  currentStoryId=storyId;
+  currentSceneIdx=0;
+  storyAnswered=false;
+  const story=STORIES[storyId];
+  document.getElementById('story-title-display').textContent=story.icon+' '+story.title;
+  buildStoryDots(story.scenes.length);
+  loadStoryScene();
+  showScreen('screen-story');
+  if(currentPlayer==='anu') speak('Let us hear the story of '+story.title+'!');
+}
+
+function buildStoryDots(count){
+  const row=document.getElementById('story-progress-dots');
+  row.innerHTML='';
+  for(let i=0;i<count;i++){
+    const div=document.createElement('div');
+    div.className='story-dot'+(i===0?' active':'');
+    div.id='sdot-'+i;
+    row.appendChild(div);
+  }
+}
+
+function loadStoryScene(){
+  storyAnswered=false;
+  const story=STORIES[currentStoryId];
+  const scene=story.scenes[currentSceneIdx];
+  document.getElementById('story-emojis-display').textContent=scene.emojis;
+  document.getElementById('story-q-box').style.display='none';
+  document.getElementById('story-next-btn').style.display='none';
+  document.getElementById('story-q-feedback').textContent='';
+  document.getElementById('story-verse').style.display='none';
+
+  // Highlight keywords in text
+  let para=scene.text;
+  scene.keywords.forEach(kw=>{
+    para=para.replace(new RegExp('\\b'+kw+'\\b','gi'),`<span class="story-word-hl">${kw}</span>`);
+  });
+  document.getElementById('story-para-display').innerHTML=para;
+
+  // Update dots
+  document.querySelectorAll('.story-dot').forEach((d,i)=>{
+    d.className='story-dot'+(i<currentSceneIdx?' done':i===currentSceneIdx?' active':'');
+  });
+
+  setTimeout(()=>playStoryAudio(),600);
+}
+
+function playStoryAudio(){
+  const scene=STORIES[currentStoryId].scenes[currentSceneIdx];
+  speak(scene.text);
+  const wordCount=scene.text.split(' ').length;
+  const readTime=wordCount*(currentPlayer==='anu'?450:320);
+  setTimeout(()=>showStoryQuestion(scene), readTime+800);
+}
+
+function replayStory(){ playStoryAudio(); }
+
+function showStoryQuestion(scene){
+  document.getElementById('story-q-text').textContent=scene.q;
+  const opts=document.getElementById('story-q-opts');
+  opts.innerHTML='';
+  const numOpts=currentPlayer==='anu'?2:4;
+  scene.opts.slice(0,numOpts).forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='q-opt';
+    btn.textContent=opt;
+    btn.onclick=()=>answerStoryQ(i,scene.ans<numOpts?scene.ans:0,scene);
+    opts.appendChild(btn);
+  });
+  document.getElementById('story-q-box').style.display='block';
+  totalQ++;
+  var numOpts3 = currentPlayer==='anu' ? 2 : 4;
+  setTimeout(function(){
+    readQuestionAloud(scene.q, scene.opts.slice(0, numOpts3));
+  }, 800);
+}
+
+function answerStoryQ(i,ans,scene){
+  if(storyAnswered) return;
+  storyAnswered=true;
+  const btns=document.querySelectorAll('#story-q-opts .q-opt');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const fb=document.getElementById('story-q-feedback');
+  const story=STORIES[currentStoryId];
+  const isLastScene=currentSceneIdx>=story.scenes.length-1;
+
+  if(i===ans){
+    btns[i].classList.add('correct');
+    fb.textContent='✅ Correct! Well done!';
+    fb.className='q-feedback correct';
+    correctQ++;score+=15;
+    if(currentPlayer==='anu') speak('That is correct! Great listening!');
+    if(isLastScene&&scene.verse){
+      const vb=document.getElementById('story-verse');
+      vb.textContent=scene.verse;
+      vb.style.display='block';
+      vb.className='result-verse-box';
+    }
+  } else {
+    btns[i].classList.add('wrong');
+    if(btns[ans]) btns[ans].classList.add('correct');
+    fb.textContent='❌ '+scene.opts[ans];
+    fb.className='q-feedback wrong';
+    if(currentPlayer==='anu') speak('The answer is '+scene.opts[ans]);
+  }
+
+  document.getElementById('story-next-btn').style.display='inline-block';
+  document.getElementById('story-next-btn').textContent=isLastScene?'🏆 Finish Story':'Next Scene →';
+}
+
+function nextStoryScene(){
+  const story=STORIES[currentStoryId];
+  if(currentSceneIdx>=story.scenes.length-1){
+    // Story complete
+    const save=loadSave(currentPlayer);
+    if(!save.storiesComplete) save.storiesComplete=[];
+    if(!save.storiesComplete.includes(story.id)){
+      save.storiesComplete.push(story.id);
+      save.stars=(save.stars||0)+5;
+    }
+    saveSave(currentPlayer,save);
+    const stars=correctQ>=totalQ?3:correctQ>=Math.ceil(totalQ/2)?2:1;
+    document.getElementById('res-icon').textContent='📖';
+    document.getElementById('res-stars').textContent='⭐'.repeat(stars);
+    document.getElementById('res-title').textContent=story.title+' Complete!';
+    document.getElementById('res-stats').innerHTML=
+      `<div class="stat-box"><div class="stat-val">${correctQ}</div><div class="stat-label">Correct</div></div>
+       <div class="stat-box"><div class="stat-val">${totalQ}</div><div class="stat-label">Questions</div></div>
+       <div class="stat-box"><div class="stat-val">${score}</div><div class="stat-label">Score</div></div>`;
+    const lastScene=story.scenes[story.scenes.length-1];
+    document.getElementById('res-verse').textContent=lastScene.verse||'"Your word is a lamp to my feet." — Psalm 119:105';
+    if(currentPlayer==='anu') speak('Amazing! You finished the story! God is so proud of you!');
+    showScreen('screen-result');
+  } else {
+    currentSceneIdx++;
+    storyAnswered=false;
+    loadStoryScene();
+  }
+}
+
+// ═══════════════════════════════════════
+//  SPEECH — Web Speech API
+// ═══════════════════════════════════════
+let femaleVoice=null;
+function initVoices(){
+  if(!window.speechSynthesis) return;
+  const set=()=>{
+    const voices=window.speechSynthesis.getVoices();
+    femaleVoice=voices.find(v=>v.name.match(/samantha|victoria|karen|moira|tessa|fiona|female|google uk english female|google us english/i))||voices[0]||null;
+  };
+  set();
+  if(window.speechSynthesis.onvoiceschanged!==undefined) window.speechSynthesis.onvoiceschanged=set;
+}
+
+function speak(text, rate) {
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.rate = rate || (currentPlayer==='anu' ? 0.82 : 0.88);
+  u.pitch = currentPlayer==='anu' ? 1.15 : 1.0;
+  u.volume = 1;
+  if(femaleVoice) u.voice = femaleVoice;
+  window.speechSynthesis.speak(u);
+}
+
+// ═══════════════════════════════════════
+//  BACKGROUND MUSIC — Gentle worship
+// ═══════════════════════════════════════
+let audioCtx=null,musicPlaying=false,musicNodes=[],musicSched=null,nextNote=0,noteIdx=0;
+const MEL=[
+  523,0,659,0,784,698,0,659,
+  587,0,698,0,784,0,659,0,
+  523,587,659,0,784,0,698,659,
+  587,523,0,493,523,0,587,0
+];
+const HARM=[
+  261,0,329,0,392,349,0,329,
+  293,0,349,0,392,0,329,0,
+  261,293,329,0,392,0,349,329,
+  293,261,0,246,261,0,293,0
+];
+const ND=0.32,LA=0.4;
+function initMusic(){if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function playTone(f,st,dur,gv,tp){
+  if(!f||!audioCtx) return;
+  const o=audioCtx.createOscillator(),gn=audioCtx.createGain(),m=audioCtx.createGain();
+  o.type=tp||'sine';o.frequency.setValueAtTime(f,st);
+  gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(gv,st+.05);
+  gn.gain.setValueAtTime(gv,st+dur*.75);gn.gain.linearRampToValueAtTime(0,st+dur);
+  m.gain.value=.10;o.connect(gn);gn.connect(m);m.connect(audioCtx.destination);
+  o.start(st);o.stop(st+dur+.04);musicNodes.push(o);
+}
+function schedNotes(){
+  while(nextNote<audioCtx.currentTime+LA){
+    const i=noteIdx%MEL.length;
+    playTone(MEL[i],nextNote,ND*.88,.45,'sine');
+    playTone(HARM[i],nextNote,ND,.22,'triangle');
+    nextNote+=ND;noteIdx++;
+  }
+}
+function startMusic(){
+  initMusic();initVoices();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  nextNote=audioCtx.currentTime+.05;noteIdx=0;musicPlaying=true;
+  musicSched=setInterval(schedNotes,50);
+  document.getElementById('music-btn').textContent='🎵';
+}
+function stopMusic(){
+  musicPlaying=false;
+  if(musicSched){clearInterval(musicSched);musicSched=null;}
+  musicNodes.forEach(n=>{try{n.stop()}catch(e){}});musicNodes=[];
+  document.getElementById('music-btn').textContent='🔇';
+}
+function toggleMusic(){musicPlaying?stopMusic():startMusic();}
+function autoStart(){if(!musicPlaying) startMusic();}
+document.addEventListener('touchstart',autoStart,{once:true});
+document.addEventListener('click',autoStart,{once:true});
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+window.addEventListener('load',function(){
+  buildStars();
+  initVoices();
+  // Load from shared KK profile
+  var kkRaw = null;
+  try { kkRaw = localStorage.getItem('kk_profile'); } catch(e){}
+  var kkProf = kkRaw ? JSON.parse(kkRaw) : null;
+  var tbAvatar = document.getElementById('tb-main-avatar');
+  var tbName = document.getElementById('tb-main-name');
+  var tbSub = document.getElementById('tb-main-sub');
+  var tbStars = document.getElementById('tb-main-stars');
+  if(kkProf && kkProf.name) {
+    if(tbAvatar) tbAvatar.textContent = kkProf.isEasy ? '⭐' : '🏆';
+    if(tbName) tbName.textContent = kkProf.name;
+    if(tbSub) tbSub.textContent = 'Age ' + kkProf.age + ' - Rising Champion';
+    var tbSave = loadSave(kkProf.name.toLowerCase());
+    var wl = (tbSave && tbSave.wordsLearned) ? tbSave.wordsLearned.length : 0;
+    if(tbStars) tbStars.textContent = wl + ' words learned so far';
+    currentPlayer = kkProf.isEasy ? 'anu' : 'dominion';
+  } else {
+    if(tbName) tbName.textContent = 'Set up your profile first!';
+    if(tbStars) tbStars.textContent = 'Visit the Hub to set up';
+  }
+});
+</script>
+</body>
+</html>
