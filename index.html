@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Kingdom Kids Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Nunito',sans-serif;min-height:100vh;background:linear-gradient(160deg,#1a1a2e 0%,#2d1b00 100%);display:flex;flex-direction:column;align-items:center;padding:24px 16px 48px;color:#fff}
+    .crown{font-size:52px;margin-bottom:4px;animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .title{font-family:'Fredoka One',cursive;font-size:36px;letter-spacing:2px;background:linear-gradient(135deg,#f7971e,#ffd200);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:4px}
+    .subtitle{font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;text-align:center}
+    .welcome-name{font-family:'Fredoka One',cursive;font-size:18px;color:#ffd200;text-align:center;margin-bottom:20px;min-height:26px}
+    .cards{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
+    .game-card{border-radius:22px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:transform .15s,box-shadow .15s;text-decoration:none;color:inherit;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+    .game-card:active{transform:scale(.97)}
+    .game-card.xo{background:linear-gradient(135deg,#1a1a2e,#0f3460);border:2px solid rgba(247,151,30,.3)}
+    .game-card.solo{background:linear-gradient(135deg,#0d0d1a,#1a0a3e);border:2px solid rgba(168,85,247,.3)}
+    .game-card.bible{background:linear-gradient(135deg,#1a0e00,#2d1b00);border:2px solid rgba(255,210,0,.3)}
+    .game-card.typing{background:linear-gradient(135deg,#0d0d1a,#1a0a3e);border:2px solid rgba(99,102,241,.3)}
+    .game-card.talkbible{background:linear-gradient(135deg,#0a0a1a,#1a0a00);border:2px solid rgba(255,210,0,.3)}
+    .card-icon{font-size:44px;flex-shrink:0}
+    .card-info{flex:1}
+    .card-title{font-family:'Fredoka One',cursive;font-size:21px;margin-bottom:3px}
+    .card-title.xo{color:#ffd200}.card-title.solo{color:#c084fc}.card-title.bible{color:#ffd200}.card-title.typing{color:#a5b4fc}.card-title.talkbible{color:#ffd200}
+    .card-desc{font-size:12px;color:#aaa;line-height:1.4}
+    .card-tag{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+    .tag-xo{background:rgba(247,151,30,.15);color:#f7971e;border:1px solid rgba(247,151,30,.3)}
+    .tag-solo{background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3)}
+    .tag-bible{background:rgba(255,210,0,.15);color:#ffd200;border:1px solid rgba(255,210,0,.3)}
+    .tag-typing{background:rgba(99,102,241,.15);color:#6366f1;border:1px solid rgba(99,102,241,.3)}
+    .tag-talkbible{background:rgba(255,210,0,.15);color:#ffd200;border:1px solid rgba(255,210,0,.3)}
+    .card-arrow{font-size:20px;color:#555;flex-shrink:0}
+    .footer{margin-top:32px;font-size:12px;color:#444;text-align:center}
+    .footer span{color:#f7971e}
+    .edit-btn{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px 20px;font-size:13px;color:#aaa;cursor:pointer;font-family:'Nunito',sans-serif}
+
+    /* SETUP SCREEN */
+    .setup-screen{display:none;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:380px}
+    .setup-screen.active{display:flex}
+    .main-screen{display:none;flex-direction:column;align-items:center;width:100%}
+    .main-screen.active{display:flex}
+    .setup-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.3);border-radius:24px;padding:28px 22px;width:100%;text-align:center}
+    .setup-title{font-family:'Fredoka One',cursive;font-size:26px;color:#ffd200;margin-bottom:6px}
+    .setup-sub{font-size:14px;color:#aaa;margin-bottom:20px;line-height:1.5}
+    .setup-input{width:100%;background:rgba(255,255,255,.08);border:2px solid rgba(255,210,0,.3);border-radius:14px;padding:14px 18px;font-family:'Fredoka One',cursive;font-size:22px;color:#fff;outline:none;text-align:center;letter-spacing:1px;margin-bottom:16px}
+    .setup-input:focus{border-color:#ffd200}
+    .setup-input::placeholder{color:#555;font-size:16px}
+    .age-label{font-size:13px;color:#aaa;margin-bottom:10px;font-weight:700}
+    .age-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;margin-bottom:20px}
+    .age-btn{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.2);border-radius:12px;padding:12px 6px;font-family:'Fredoka One',cursive;font-size:18px;color:#aaa;cursor:pointer;transition:all .15s}
+    .age-btn:active{transform:scale(.95)}
+    .age-btn.selected{background:rgba(255,210,0,.2);border-color:#ffd200;color:#ffd200}
+    .btn-setup{font-family:'Fredoka One',cursive;font-size:20px;padding:14px 36px;border:none;border-radius:50px;background:linear-gradient(135deg,#f7971e,#ffd200);color:#1a0e00;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3);transition:transform .1s;width:100%}
+    .btn-setup:active{transform:scale(.96)}
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN (shown on first visit) -->
+<div class="setup-screen" id="setup-screen">
+  <div class="crown">👑</div>
+  <div class="setup-card">
+    <div class="setup-title">Welcome!</div>
+    <div class="setup-sub">Kingdom Kids Games is a fun place to play, learn and grow in God's Word. Let us set up your profile!</div>
+    <input class="setup-input" id="setup-name" type="text" placeholder="Your name..." maxlength="16" autocomplete="off"/>
+    <div class="age-label">How old are you?</div>
+    <div class="age-grid" id="age-grid"></div>
+    <button class="btn-setup" onclick="finishSetup()">Let's Play! 🎮</button>
+  </div>
+  <div style="font-size:12px;color:#555;text-align:center;margin-top:8px">This is saved on your device. No account needed!</div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div class="main-screen" id="main-screen">
+  <div class="crown">👑</div>
+  <div class="title">Kingdom Kids</div>
+  <div class="subtitle">Games · Bible · Learning</div>
+  <div class="welcome-name" id="welcome-name"></div>
+
+  <div class="cards">
+    <a class="game-card xo" href="xo-game/index.html">
+      <div class="card-icon">✕○</div>
+      <div class="card-info">
+        <div class="card-title xo">X &amp; O</div>
+        <div class="card-desc">Play together! Coin flip decides who goes first.</div>
+        <span class="card-tag tag-xo">2 Players · Learn Mode</span>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+    <a class="game-card solo" href="solo-game/index.html">
+      <div class="card-icon">🤖</div>
+      <div class="card-info">
+        <div class="card-title solo">Solo Challenge</div>
+        <div class="card-desc">Beat Robot Rex through 4 stages — Baby to Beast!</div>
+        <span class="card-tag tag-solo">Solo · 4 Stages · Unlock System</span>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+    <a class="game-card bible" href="bible-games/index.html">
+      <div class="card-icon">✝️</div>
+      <div class="card-info">
+        <div class="card-title bible">Kingdom Kids Bible</div>
+        <div class="card-desc">Quiz, verses, word search, stories and character match!</div>
+        <span class="card-tag tag-bible">5 Games · Solo &amp; Family</span>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+    <a class="game-card typing" href="typing/index.html">
+      <div class="card-icon">🐸</div>
+      <div class="card-info">
+        <div class="card-title typing">Frog Typer</div>
+        <div class="card-desc">Frog jumps and eats faith words! 7 fun modes.</div>
+        <span class="card-tag tag-typing">Solo · 7 Modes · Faith Words</span>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+    <a class="game-card talkbible" href="talking-bible/index.html">
+      <div class="card-icon">📖</div>
+      <div class="card-info">
+        <div class="card-title talkbible">Talking Bible</div>
+        <div class="card-desc">Words spell themselves, verses read aloud, stories come alive!</div>
+        <span class="card-tag tag-talkbible">3 Modes · 30 Words · Stories</span>
+      </div>
+      <div class="card-arrow">▶</div>
+    </a>
+  </div>
+
+  <button class="edit-btn" onclick="editProfile()">✏️ Change My Name or Age</button>
+  <div class="footer">Made with ❤️ for <span>God's Kids</span></div>
+</div>
+
+<script>
+const PROFILE_KEY = 'kk_profile';
+
+function loadProfile() {
+  try { const r = localStorage.getItem(PROFILE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function saveProfile(p) {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e) {}
+}
+
+let selectedAge = null;
+
+function buildAgeGrid() {
+  const grid = document.getElementById('age-grid');
+  grid.innerHTML = '';
+  for (let a = 4; a <= 11; a++) {
+    const btn = document.createElement('button');
+    btn.className = 'age-btn';
+    btn.textContent = a;
+    btn.dataset.age = a;
+    btn.onclick = function() {
+      document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedAge = parseInt(btn.dataset.age);
+    };
+    grid.appendChild(btn);
+  }
+}
+
+function finishSetup() {
+  const name = document.getElementById('setup-name').value.trim();
+  if (!name) { alert('Please enter your name!'); return; }
+  if (!selectedAge) { alert('Please pick your age!'); return; }
+  const profile = { name: name, age: selectedAge, isEasy: selectedAge <= 6 };
+  saveProfile(profile);
+  showMain(profile);
+}
+
+function showMain(profile) {
+  document.getElementById('setup-screen').classList.remove('active');
+  document.getElementById('main-screen').classList.add('active');
+  const greeting = profile.age <= 6 ? 'Hi ' + profile.name + '! 🌟' : 'Welcome back, ' + profile.name + '! 🏆';
+  document.getElementById('welcome-name').textContent = greeting;
+}
+
+function editProfile() {
+  document.getElementById('main-screen').classList.remove('active');
+  const profile = loadProfile();
+  if (profile) {
+    document.getElementById('setup-name').value = profile.name;
+    selectedAge = profile.age;
+    document.querySelectorAll('.age-btn').forEach(b => {
+      if (parseInt(b.dataset.age) === profile.age) b.classList.add('selected');
+    });
+  }
+  document.getElementById('setup-screen').classList.add('active');
+}
+
+// Boot
+buildAgeGrid();
+const profile = loadProfile();
+if (profile && profile.name) {
+  showMain(profile);
+} else {
+  document.getElementById('setup-screen').classList.add('active');
+}
+</script>
+</body>
+</html>
