@@ -191,29 +191,14 @@
   <div class="screen active" id="screen-player">
     <div style="font-size:15px;color:#888;text-align:center;">Who's playing today?</div>
     <div class="player-cards">
-      <div class="player-card" onclick="selectPlayer('dominion')">
-        <div class="p-avatar">🏆</div>
-        <div class="p-info">
-          <div class="p-name">Dominion</div>
-          <div class="p-sub">Age 7 · Rising Champion</div>
-          <div class="p-progress" id="dominion-progress">Loading...</div>
-        </div>
-      </div>
-      <div class="player-card" onclick="selectPlayer('anu')">
-        <div class="p-avatar">⭐</div>
-        <div class="p-info">
-          <div class="p-name">Anu</div>
-          <div class="p-sub">Age 5 · Little Star</div>
-          <div class="p-progress" id="anu-progress">Loading...</div>
-        </div>
-      </div>
+      
     </div>
   </div>
 
   <!-- SCREEN: Stage Select -->
   <div class="screen" id="screen-stages">
     <div class="stage-header">
-      <div class="player-label" id="stage-player-label">Dominion</div>
+      <div class="player-label" id="stage-player-label">Player</div>
       <div class="stage-sub">Choose your challenge level</div>
     </div>
     <div class="stages-grid" id="stages-grid"></div>
@@ -363,7 +348,7 @@
     function selectPlayer(player) {
       currentPlayer = player;
       progress = loadProgress(player);
-      document.getElementById('stage-player-label').textContent = player === 'dominion' ? 'Dominion' : 'Anu';
+      document.getElementById('stage-player-label').textContent = kkGetProfile().name;
       renderStages();
       showScreen('screen-stages');
     }
@@ -511,7 +496,7 @@
 
     function showResult(outcome) {
       const stage = STAGES[currentStageId];
-      const playerName = currentPlayer === 'dominion' ? 'Dominion' : 'Anu';
+      const playerName = kkGetProfile().name;
       const rb = document.getElementById('result-box');
       const rm = document.getElementById('result-msg');
       const rs = document.getElementById('result-sub');
@@ -704,17 +689,24 @@
 
     function updatePlayerCards() {
       var prof = kkGetProfile();
-      var avatar = prof.age <= 6 ? '⭐' : '🏆';
+      var noProfile = !prof.name || prof.name === 'Friend';
+      var avatar = (prof.isEasy || prof.age <= 6) ? '⭐' : '🏆';
+      // Main card
       var el = document.getElementById('main-player-avatar');
       if(el) el.textContent = avatar;
       var nm = document.getElementById('main-player-name');
-      if(nm) nm.textContent = prof.name;
+      if(nm) nm.textContent = noProfile ? 'Set up your profile!' : prof.name;
       var sub = document.getElementById('main-player-sub');
-      if(sub) sub.textContent = 'Age ' + prof.age + ' · Rising Champion';
-      var prog = loadProgress(prof.name.toLowerCase().replace(/\s+/g,'_'));
+      if(sub) sub.textContent = noProfile ? 'Open the Hub first to set your name' : 'Age ' + prof.age + ' · Rising Champion';
+      var pKey = prof.name.toLowerCase().replace(/\s+/g,'_');
+      var prog = loadProgress(pKey);
       var stage = STAGES[prog.unlockedStage] || STAGES[0];
       var pr = document.getElementById('main-player-progress');
-      if(pr) pr.textContent = 'Stage ' + (prog.unlockedStage+1) + ' unlocked — ' + stage.icon + ' ' + stage.name;
+      if(pr) pr.textContent = 'Stage ' + (prog.unlockedStage+1) + ' — ' + stage.icon + ' ' + stage.name;
+      // Also update any stale name labels
+      var stageLabel = document.getElementById('stage-player-label');
+      if(stageLabel && stageLabel.textContent === 'Player') stageLabel.textContent = prof.name;
+
     }
     updatePlayerCards();
 
