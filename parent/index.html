@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Parent Dashboard — Kingdom Kids</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;min-height:100vh;background:linear-gradient(160deg,#0a0a1a 0%,#1a1a2e 100%);display:flex;flex-direction:column;align-items:center;padding:16px 14px 48px;color:#fff}
+.nav-bar{width:100%;max-width:420px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-top:8px}
+.nav-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:800;color:#aaa;cursor:pointer;text-decoration:none;font-family:'Nunito',sans-serif}
+.nav-title{font-family:'Fredoka One',cursive;font-size:18px;color:#ffd200}
+.screen{width:100%;max-width:420px;display:none;flex-direction:column;align-items:center;gap:16px}
+.screen.active{display:flex}
+
+/* PIN SCREEN */
+.pin-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.25);border-radius:24px;padding:28px 22px;width:100%;text-align:center}
+.pin-title{font-family:'Fredoka One',cursive;font-size:26px;color:#ffd200;margin-bottom:6px}
+.pin-sub{font-size:13px;color:#888;margin-bottom:22px;line-height:1.5}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:24px}
+.pin-dot{width:20px;height:20px;border-radius:50%;background:rgba(255,210,0,.15);border:2px solid rgba(255,210,0,.3);transition:background .2s}
+.pin-dot.filled{background:#ffd200;border-color:#ffd200}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;margin:0 auto}
+.pin-btn{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;font-family:'Fredoka One',cursive;font-size:24px;color:#fff;cursor:pointer;transition:background .15s,transform .1s;text-align:center}
+.pin-btn:active{transform:scale(.93);background:rgba(255,210,0,.15)}
+.pin-btn.pin-del{font-size:18px;color:#aaa}
+.pin-btn.pin-zero{grid-column:2}
+.pin-error{color:#f87171;font-size:13px;font-weight:700;min-height:20px;margin-top:8px}
+.pin-hint{font-size:12px;color:#555;margin-top:8px}
+
+/* DASHBOARD */
+.dash-header{width:100%;background:rgba(255,255,255,.06);border:2px solid rgba(255,210,0,.2);border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+.dash-avatar{font-size:44px;flex-shrink:0}
+.dash-name{font-family:'Fredoka One',cursive;font-size:22px;color:#ffd200}
+.dash-age{font-size:13px;color:#888;margin-top:2px}
+.dash-last{font-size:12px;color:#6366f1;margin-top:3px;font-weight:700}
+
+.section{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px}
+.section-title{font-family:'Fredoka One',cursive;font-size:15px;color:#ffd200;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-size:13px;color:#aaa;display:flex;align-items:center;gap:6px}
+.stat-value{font-family:'Fredoka One',cursive;font-size:16px;color:#fff}
+.stat-value.gold{color:#ffd200}
+.stat-value.green{color:#4ade80}
+.stat-value.purple{color:#a855f7}
+
+.progress-mini{width:100%;background:rgba(255,255,255,.08);border-radius:10px;height:8px;margin-top:4px;overflow:hidden}
+.progress-mini-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,#f7971e,#ffd200);transition:width .5s ease}
+
+.game-tile{background:rgba(255,255,255,.04);border-radius:12px;padding:10px 14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.06)}
+.game-tile:last-child{margin-bottom:0}
+.game-tile-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.game-name{font-size:13px;font-weight:800;color:#e0e0ff}
+.game-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.badge-active{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.badge-new{background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+.game-detail{font-size:12px;color:#666}
+
+.bible-stat{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.bible-stat:last-child{border-bottom:none}
+.bible-stat-icon{font-size:22px;flex-shrink:0}
+.bible-stat-info{flex:1}
+.bible-stat-title{font-size:13px;font-weight:800;color:#e0c080}
+.bible-stat-detail{font-size:11px;color:#666;margin-top:2px}
+
+.note-box{width:100%;background:rgba(255,255,255,.04);border:2px solid rgba(255,210,0,.2);border-radius:16px;padding:14px}
+.note-label{font-size:12px;color:#8b6914;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.note-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,210,0,.2);border-radius:10px;padding:10px 14px;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;resize:none;outline:none;min-height:80px}
+.note-input:focus{border-color:#ffd200}
+.note-from{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,210,0,.2);border-radius:10px;padding:8px 14px;color:#fff;font-family:'Nunito',sans-serif;font-size:14px;outline:none;margin-top:6px}
+.note-from:focus{border-color:#ffd200}
+.btn-save-note{font-family:'Fredoka One',cursive;font-size:16px;padding:10px 24px;border:none;border-radius:50px;background:linear-gradient(135deg,#f7971e,#ffd200);color:#1a0e00;cursor:pointer;margin-top:10px;width:100%}
+.note-saved{font-size:13px;color:#4ade80;text-align:center;margin-top:6px;min-height:18px}
+
+.note-display{background:rgba(255,210,0,.08);border-left:4px solid #ffd200;border-radius:0 10px 10px 0;padding:10px 14px;font-size:13px;color:#ffd200;font-style:italic;margin-top:8px;display:none}
+.note-display.show{display:block}
+.note-display-from{font-size:11px;color:#8b6914;margin-top:4px;font-style:normal;font-weight:700}
+
+.time-stat{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.time-stat:last-child{border-bottom:none}
+.time-label{font-size:13px;color:#aaa}
+.time-val{font-size:13px;font-weight:800;color:#a5b4fc}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.summary-box{background:rgba(255,255,255,.06);border-radius:14px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.08)}
+.summary-val{font-family:'Fredoka One',cursive;font-size:28px;color:#ffd200}
+.summary-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+.btn-logout{font-family:'Fredoka One',cursive;font-size:15px;padding:10px 24px;border:none;border-radius:50px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#aaa;cursor:pointer;margin-top:4px}
+.btn-reset-pin{font-size:12px;color:#f87171;cursor:pointer;background:none;border:none;font-family:'Nunito',sans-serif;font-weight:700;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a class="nav-btn" href="index.html">← Hub</a>
+  <div class="nav-title">👨‍👩‍👧 Parent Dashboard</div>
+  <button class="nav-btn" onclick="lockDashboard()">🔒 Lock</button>
+</div>
+
+<!-- SCREEN: PIN -->
+<div class="screen active" id="screen-pin">
+  <div class="pin-card">
+    <div class="pin-title" id="pin-title">Parent Area 🔒</div>
+    <div class="pin-sub" id="pin-sub">Enter your 4-digit PIN to view your child's progress.</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress(1)">1</button>
+      <button class="pin-btn" onclick="pinPress(2)">2</button>
+      <button class="pin-btn" onclick="pinPress(3)">3</button>
+      <button class="pin-btn" onclick="pinPress(4)">4</button>
+      <button class="pin-btn" onclick="pinPress(5)">5</button>
+      <button class="pin-btn" onclick="pinPress(6)">6</button>
+      <button class="pin-btn" onclick="pinPress(7)">7</button>
+      <button class="pin-btn" onclick="pinPress(8)">8</button>
+      <button class="pin-btn" onclick="pinPress(9)">9</button>
+      <button class="pin-btn pin-zero" onclick="pinPress(0)">0</button>
+      <button class="pin-btn pin-del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-hint" id="pin-hint"></div>
+    <button class="btn-reset-pin" id="reset-pin-btn" onclick="resetPIN()" style="display:none">Forgot PIN? Reset it</button>
+  </div>
+</div>
+
+<!-- SCREEN: DASHBOARD -->
+<div class="screen" id="screen-dash">
+
+  <!-- Child header -->
+  <div class="dash-header">
+    <div class="dash-avatar" id="dash-avatar">🏆</div>
+    <div>
+      <div class="dash-name" id="dash-name">Loading...</div>
+      <div class="dash-age" id="dash-age">Age 7</div>
+      <div class="dash-last" id="dash-last">Loading activity...</div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-box">
+      <div class="summary-val" id="sum-games">0</div>
+      <div class="summary-label">Games Played</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-val" id="sum-wins">0</div>
+      <div class="summary-label">Total Wins</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-val" id="sum-words">0</div>
+      <div class="summary-label">Bible Words</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-val" id="sum-stars">0</div>
+      <div class="summary-label">Stars Earned</div>
+    </div>
+  </div>
+
+  <!-- Games Progress -->
+  <div class="section">
+    <div class="section-title">🎮 Games Progress</div>
+    <div id="games-section"></div>
+  </div>
+
+  <!-- Bible Learning -->
+  <div class="section">
+    <div class="section-title">📖 Bible Learning</div>
+    <div id="bible-section"></div>
+  </div>
+
+  <!-- Time & Activity -->
+  <div class="section">
+    <div class="section-title">⏱️ Activity Log</div>
+    <div id="time-section"></div>
+  </div>
+
+  <!-- Encouragement Note -->
+  <div class="note-box">
+    <div class="note-label">💌 Leave an Encouragement Note</div>
+    <div class="note-display" id="note-display">
+      <span id="note-display-text"></span>
+      <div class="note-display-from" id="note-display-from"></div>
+    </div>
+    <textarea class="note-input" id="note-input" placeholder="Write something encouraging for your child..." maxlength="200"></textarea>
+    <input class="note-from" id="note-from" type="text" placeholder="From: Dad / Mum / Pastor..." maxlength="30"/>
+    <button class="btn-save-note" onclick="saveNote()">💾 Save Note</button>
+    <div class="note-saved" id="note-saved"></div>
+  </div>
+
+  <button class="btn-logout" onclick="lockDashboard()">🔒 Lock Dashboard</button>
+</div>
+
+<script>
+var KEYS = {
+  PIN: 'kk_parent_pin',
+  PROFILE: 'kk_profile',
+  NOTE: 'kk_parent_note',
+  LAST_ACTIVE: 'kk_last_active',
+  SESSION_COUNT: 'kk_session_count',
+  // Game save keys
+  SOLO: function(n){ return 'xo_solo_' + n; },
+  FROG: 'frogtyper_profile',
+  BIBLE: function(n){ return 'bible_' + n; },
+  TALKBIBLE: function(n){ return 'talkbible_' + n; },
+};
+
+function lsGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+function lsSet(key,val){ try{ localStorage.setItem(key,val); }catch(e){} }
+function lsParse(key){ try{ var r=lsGet(key); return r?JSON.parse(r):null; }catch(e){ return null; } }
+
+// ─────────────────────────────
+//  PIN SYSTEM
+// ─────────────────────────────
+var pinBuffer = '';
+var isSettingPin = false;
+var pinConfirmBuffer = '';
+var pinConfirmStep = false;
+
+function pinPress(n){
+  if(pinBuffer.length >= 4) return;
+  pinBuffer += n;
+  updatePinDots();
+  if(pinBuffer.length === 4){
+    setTimeout(function(){ processPIN(); }, 200);
+  }
+}
+
+function pinDel(){
+  pinBuffer = pinBuffer.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots(){
+  for(var i=0;i<4;i++){
+    var dot = document.getElementById('pd'+i);
+    if(dot) dot.className = 'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+  }
+}
+
+function processPIN(){
+  var savedPIN = lsGet(KEYS.PIN);
+  if(!savedPIN){
+    // First time — set PIN mode
+    if(!pinConfirmStep){
+      pinConfirmBuffer = pinBuffer;
+      pinConfirmStep = true;
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('pin-title').textContent = 'Confirm Your PIN';
+      document.getElementById('pin-sub').textContent = 'Enter the same PIN again to confirm.';
+      document.getElementById('pin-error').textContent = '';
+    } else {
+      if(pinBuffer === pinConfirmBuffer){
+        lsSet(KEYS.PIN, pinBuffer);
+        document.getElementById('pin-error').textContent = '';
+        openDashboard();
+      } else {
+        pinBuffer = ''; pinConfirmBuffer = ''; pinConfirmStep = false;
+        updatePinDots();
+        document.getElementById('pin-title').textContent = 'Set Your PIN';
+        document.getElementById('pin-sub').textContent = 'PINs did not match. Try again.';
+        document.getElementById('pin-error').textContent = 'PINs did not match!';
+      }
+    }
+  } else {
+    if(pinBuffer === savedPIN){
+      openDashboard();
+    } else {
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+    }
+  }
+}
+
+function resetPIN(){
+  if(confirm('Reset your PIN? You will need to set a new one.')){
+    lsSet(KEYS.PIN, '');
+    localStorage.removeItem(KEYS.PIN);
+    pinBuffer = ''; pinConfirmBuffer = ''; pinConfirmStep = false;
+    updatePinDots();
+    document.getElementById('pin-title').textContent = 'Set a New PIN';
+    document.getElementById('pin-sub').textContent = 'Choose a 4-digit PIN for the parent area.';
+    document.getElementById('pin-error').textContent = '';
+  }
+}
+
+function lockDashboard(){
+  pinBuffer = ''; pinConfirmStep = false;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  showScreen('screen-pin');
+  // Restore normal pin screen state
+  var savedPIN = lsGet(KEYS.PIN);
+  if(savedPIN){
+    document.getElementById('pin-title').textContent = 'Parent Area';
+    document.getElementById('pin-sub').textContent = 'Enter your 4-digit PIN.';
+    document.getElementById('reset-pin-btn').style.display = 'block';
+  }
+}
+
+// ─────────────────────────────
+//  DASHBOARD DATA
+// ─────────────────────────────
+function openDashboard(){
+  loadDashboard();
+  showScreen('screen-dash');
+}
+
+function loadDashboard(){
+  var profile = lsParse(KEYS.PROFILE);
+  if(!profile){ 
+    document.getElementById('dash-name').textContent = 'No profile set up yet';
+    document.getElementById('dash-age').textContent = 'Ask your child to open the Hub first';
+    return;
+  }
+
+  var name = profile.name || 'Your Child';
+  var age = profile.age || '?';
+  var isEasy = profile.isEasy || age <= 6;
+  var nameKey = name.toLowerCase().replace(/\s+/g,'_');
+
+  document.getElementById('dash-avatar').textContent = isEasy ? '⭐' : '🏆';
+  document.getElementById('dash-name').textContent = name;
+  document.getElementById('dash-age').textContent = 'Age ' + age + (isEasy ? ' · Easy Mode' : ' · Standard Mode');
+
+  // Last active
+  var lastActive = lsGet(KEYS.LAST_ACTIVE);
+  var sessionCount = parseInt(lsGet(KEYS.SESSION_COUNT) || '0');
+  document.getElementById('dash-last').textContent = lastActive ? 'Last active: ' + lastActive : 'Not yet tracked';
+
+  // ── GAMES DATA ──
+  var totalGames = 0, totalWins = 0;
+
+  // Solo game
+  var soloSave = lsParse(KEYS.SOLO(nameKey)) || lsParse('xo_solo_dominion') || lsParse('xo_solo_anu') || {};
+  var soloUnlocked = soloSave.unlockedStage || 0;
+  var soloStages = soloSave.stages || [];
+  var soloWins = soloStages.reduce(function(a,s){ return a + (s&&s.wins||0); }, 0);
+  var soloPlays = soloStages.reduce(function(a,s){ return a + (s&&s.plays||0); }, 0);
+  totalGames += soloPlays; totalWins += soloWins;
+
+  var STAGE_NAMES = ['Baby Rex','Sleepy Rex','Grumpy Rex','Beast Rex'];
+  var STAGE_ICONS = ['🐣','😴','😤','👾'];
+
+  // Frog typer
+  var frogProfile = lsParse(KEYS.FROG) || {};
+  var frogWins = frogProfile.totalWins || 0;
+  var frogModeWins = frogProfile.modeWins || {};
+  var frogTotalModeGames = Object.values(frogModeWins).reduce(function(a,v){return a+v;},0);
+  var frogScores = frogProfile.modeScores || {};
+  var bestWPM = 0;
+  // Check frog stage saves for WPM
+  var frogStageSave = lsParse('typer_' + nameKey) || lsParse('typer_dominion') || lsParse('typer_anu') || {};
+  if(frogStageSave.stages) frogStageSave.stages.forEach(function(s){ if(s&&s.bestWPM>bestWPM) bestWPM=s.bestWPM; });
+  var evoStages = ['Egg','Tadpole','Frog','Crowned Frog','Golden Frog'];
+  var evoIcons = ['🥚','🐛','🐸','👑','✨'];
+  var frogEvoIdx = 0;
+  var evoThresholds = [0,3,6,9,12];
+  evoThresholds.forEach(function(t,i){ if(frogWins>=t) frogEvoIdx=i; });
+  totalGames += frogTotalModeGames; totalWins += frogWins;
+
+  // Bible games
+  var bibleSave = lsParse(KEYS.BIBLE(nameKey)) || lsParse(KEYS.BIBLE('dominion')) || lsParse(KEYS.BIBLE('anu')) || {};
+  var bibleScores = bibleSave.scores || {};
+  var bibleGames = Object.keys(bibleScores).length;
+  totalGames += bibleGames;
+
+  // Talking Bible
+  var tbSave = lsParse(KEYS.TALKBIBLE(nameKey)) || lsParse(KEYS.TALKBIBLE('dominion')) || lsParse(KEYS.TALKBIBLE('anu')) || {};
+  var tbWords = (tbSave.wordsLearned || []).length;
+  var tbVerses = (tbSave.versesLearned || []).length;
+  var tbStories = (tbSave.storiesComplete || []).length;
+  var tbStars = tbSave.stars || 0;
+
+  // ── RENDER GAMES ──
+  var gamesHtml = '';
+
+  // XO game (basic)
+  gamesHtml += '<div class="game-tile"><div class="game-tile-top"><span class="game-name">✕○ X &amp; O</span><span class="game-badge badge-active">2 Player</span></div><div class="game-detail">Play together with family!</div></div>';
+
+  // Solo game
+  gamesHtml += '<div class="game-tile"><div class="game-tile-top"><span class="game-name">🤖 Solo Challenge</span><span class="game-badge badge-active">Stage ' + (soloUnlocked+1) + '/4</span></div>';
+  gamesHtml += '<div class="game-detail">' + STAGE_ICONS[soloUnlocked] + ' ' + (STAGE_NAMES[soloUnlocked]||'Complete') + ' · ' + soloWins + ' wins · ' + soloPlays + ' games played</div>';
+  var soloTotalWins = soloStages.reduce(function(a,s){return a+(s&&s.wins||0);},0);
+  var soloPct = Math.min(100, Math.round(soloTotalWins/12*100));
+  gamesHtml += '<div class="progress-mini"><div class="progress-mini-fill" style="width:'+soloPct+'%"></div></div></div>';
+
+  // Frog Typer
+  gamesHtml += '<div class="game-tile"><div class="game-tile-top"><span class="game-name">🐸 Frog Typer</span><span class="game-badge badge-active">' + evoIcons[frogEvoIdx] + ' ' + evoStages[frogEvoIdx] + '</span></div>';
+  gamesHtml += '<div class="game-detail">' + frogWins + ' total wins · Best ' + bestWPM + ' WPM</div>';
+  var frogPct = Math.min(100, Math.round(frogWins/12*100));
+  gamesHtml += '<div class="progress-mini"><div class="progress-mini-fill" style="width:'+frogPct+'%"></div></div></div>';
+
+  // Bible Games
+  var bibleGameNames = {quiz:'Quiz Bowl',verse:'Verse Builder',wordsearch:'Word Search',story:'Story Adventure',match:'Character Match'};
+  var bibleHtml = '';
+  Object.keys(bibleGameNames).forEach(function(k){
+    if(bibleScores[k] !== undefined){
+      bibleHtml += '<div class="game-tile"><div class="game-tile-top"><span class="game-name">📖 ' + bibleGameNames[k] + '</span><span class="game-badge badge-new">Best: ' + bibleScores[k] + ' pts</span></div></div>';
+    }
+  });
+  if(!bibleHtml) bibleHtml = '<div class="game-tile"><div class="game-detail" style="color:#555">Not played yet</div></div>';
+  gamesHtml += bibleHtml;
+
+  document.getElementById('games-section').innerHTML = gamesHtml;
+
+  // ── RENDER BIBLE LEARNING ──
+  var bibleHtmlSection = '';
+
+  // Talking Bible words
+  bibleHtmlSection += '<div class="bible-stat"><div class="bible-stat-icon">✨</div><div class="bible-stat-info"><div class="bible-stat-title">Faith Words Learned</div><div class="bible-stat-detail">' + tbWords + ' of 30 words · ' + Math.round(tbWords/30*100) + '% complete</div><div class="progress-mini" style="margin-top:4px"><div class="progress-mini-fill" style="width:'+Math.round(tbWords/30*100)+'%"></div></div></div></div>';
+
+  // Verses
+  bibleHtmlSection += '<div class="bible-stat"><div class="bible-stat-icon">📜</div><div class="bible-stat-info"><div class="bible-stat-title">Verses Completed</div><div class="bible-stat-detail">' + tbVerses + ' of 10 verses learned</div><div class="progress-mini" style="margin-top:4px"><div class="progress-mini-fill" style="width:'+Math.round(tbVerses/10*100)+'%"></div></div></div></div>';
+
+  // Stories
+  bibleHtmlSection += '<div class="bible-stat"><div class="bible-stat-icon">📖</div><div class="bible-stat-info"><div class="bible-stat-title">Bible Stories Finished</div><div class="bible-stat-detail">' + tbStories + ' of 3 stories completed</div><div class="progress-mini" style="margin-top:4px"><div class="progress-mini-fill" style="width:'+Math.round(tbStories/3*100)+'%"></div></div></div></div>';
+
+  // Stars
+  bibleHtmlSection += '<div class="bible-stat"><div class="bible-stat-icon">⭐</div><div class="bible-stat-info"><div class="bible-stat-title">Stars Earned</div><div class="bible-stat-detail">' + tbStars + ' stars from Bible activities</div></div></div>';
+
+  document.getElementById('bible-section').innerHTML = bibleHtmlSection;
+
+  // ── RENDER TIME / ACTIVITY ──
+  var timeHtml = '';
+  timeHtml += '<div class="time-stat"><div class="time-label">Total Sessions</div><div class="time-val">' + sessionCount + '</div></div>';
+  timeHtml += '<div class="time-stat"><div class="time-label">Last Active</div><div class="time-val">' + (lastActive || 'Not tracked yet') + '</div></div>';
+  timeHtml += '<div class="time-stat"><div class="time-label">Total Games Played</div><div class="time-val">' + totalGames + '</div></div>';
+  timeHtml += '<div class="time-stat"><div class="time-label">Total Wins</div><div class="time-val">' + totalWins + '</div></div>';
+  timeHtml += '<div class="time-stat"><div class="time-label">Bible Stars</div><div class="time-val">' + tbStars + '</div></div>';
+  document.getElementById('time-section').innerHTML = timeHtml;
+
+  // ── SUMMARY ──
+  document.getElementById('sum-games').textContent = totalGames;
+  document.getElementById('sum-wins').textContent = totalWins;
+  document.getElementById('sum-words').textContent = tbWords;
+  document.getElementById('sum-stars').textContent = tbStars;
+
+  // ── NOTE ──
+  var note = lsParse(KEYS.NOTE);
+  if(note && note.text){
+    document.getElementById('note-display-text').textContent = note.text;
+    document.getElementById('note-display-from').textContent = note.from ? '— ' + note.from : '';
+    document.getElementById('note-display').className = 'note-display show';
+    document.getElementById('note-input').value = note.text;
+    document.getElementById('note-from').value = note.from || '';
+  }
+}
+
+function saveNote(){
+  var text = document.getElementById('note-input').value.trim();
+  var from = document.getElementById('note-from').value.trim();
+  if(!text){ return; }
+  lsSet(KEYS.NOTE, JSON.stringify({text:text, from:from, date: new Date().toLocaleDateString()}));
+  document.getElementById('note-display-text').textContent = text;
+  document.getElementById('note-display-from').textContent = from ? '— ' + from : '';
+  document.getElementById('note-display').className = 'note-display show';
+  document.getElementById('note-saved').textContent = '✅ Note saved! Your child will see this.';
+  setTimeout(function(){ document.getElementById('note-saved').textContent = ''; }, 3000);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+// Boot
+window.addEventListener('load', function(){
+  var savedPIN = lsGet(KEYS.PIN);
+  // Track last active
+  lsSet(KEYS.LAST_ACTIVE, new Date().toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short',year:'numeric'}));
+  var sc = parseInt(lsGet(KEYS.SESSION_COUNT) || '0');
+  lsSet(KEYS.SESSION_COUNT, sc + 1);
+
+  if(savedPIN){
+    document.getElementById('pin-title').textContent = 'Parent Area';
+    document.getElementById('pin-sub').textContent = 'Enter your 4-digit PIN to view progress.';
+    document.getElementById('reset-pin-btn').style.display = 'block';
+  } else {
+    document.getElementById('pin-title').textContent = 'Set a Parent PIN';
+    document.getElementById('pin-sub').textContent = 'Choose a 4-digit PIN. Your child cannot access this area.';
+  }
+});
+</script>
+</body>
+</html>
