@@ -130,10 +130,10 @@
 <body>
 
 <button class="music-btn playing" id="music-btn" onclick="toggleMusic()" title="Toggle music">🎵</button>
-<a class="back-btn" href="../index.html">← Home</a>
+<a class="back-btn" href="../index.html">👑 Hub</a>
 
 <div class="title">✝️ Kingdom Kids</div>
-<div class="subtitle">Bible Games · Dominion &amp; Anu</div>
+<div class="subtitle">Kingdom Kids Bible Games</div>
 
 <!-- SCREEN: Player Select -->
 <div class="screen active" id="screen-player">
@@ -141,11 +141,8 @@
   <div class="p-cards">
     <div class="p-card" onclick="selectPlayer('dominion')">
       <div class="p-avatar">🏆</div>
-      <div><div class="p-name">Dominion</div><div class="p-sub">Age 7 · Rising Champion</div></div>
+      <div><div class="p-name" id="bible-main-name2">Loading...</div><div class="p-sub">Rising Champion</div></div>
     </div>
-    <div class="p-card" onclick="selectPlayer('anu')">
-      <div class="p-avatar">⭐</div>
-      <div><div class="p-name">Anu</div><div class="p-sub">Age 5 · Little Star</div></div>
     </div>
     <div class="p-card" onclick="selectPlayer('family')">
       <div class="p-avatar">👨‍👩‍👧‍👦</div>
@@ -164,7 +161,7 @@
 <!-- SCREEN: Quiz -->
 <div class="screen" id="screen-quiz">
   <div class="game-topbar">
-    <div><div class="topbar-label">Player</div><div class="topbar-player" id="quiz-player-label">Dominion</div></div>
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="quiz-player-label">You</div></div>
     <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="quiz-score">0</div></div>
     <div style="text-align:right"><div class="topbar-label">Question</div><div class="topbar-score" id="quiz-qnum">1/5</div></div>
   </div>
@@ -183,7 +180,7 @@
 <!-- SCREEN: Verse Builder -->
 <div class="screen" id="screen-verse">
   <div class="game-topbar">
-    <div><div class="topbar-label">Player</div><div class="topbar-player" id="verse-player-label">Dominion</div></div>
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="verse-player-label">You</div></div>
     <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="verse-score">0</div></div>
     <div style="text-align:right"><div class="topbar-label">Verse</div><div class="topbar-score" id="verse-num">1/6</div></div>
   </div>
@@ -202,7 +199,7 @@
 <!-- SCREEN: Word Search -->
 <div class="screen" id="screen-wordsearch">
   <div class="game-topbar">
-    <div><div class="topbar-label">Player</div><div class="topbar-player" id="ws-player-label">Dominion</div></div>
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="ws-player-label">You</div></div>
     <div style="text-align:center"><div class="topbar-label">Found</div><div class="topbar-score" id="ws-found">0/6</div></div>
     <div style="text-align:right"><div class="topbar-label">Theme</div><div class="topbar-score" style="font-size:14px" id="ws-theme">Heroes</div></div>
   </div>
@@ -218,7 +215,7 @@
 <!-- SCREEN: Story Adventure -->
 <div class="screen" id="screen-story">
   <div class="game-topbar">
-    <div><div class="topbar-label">Player</div><div class="topbar-player" id="story-player-label">Dominion</div></div>
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="story-player-label">You</div></div>
     <div style="text-align:center"><div class="topbar-label">Score</div><div class="topbar-score" id="story-score">0</div></div>
     <div style="text-align:right"><div class="topbar-label">Story</div><div class="topbar-score" id="story-num">1/6</div></div>
   </div>
@@ -239,7 +236,7 @@
 <!-- SCREEN: Character Match -->
 <div class="screen" id="screen-match">
   <div class="game-topbar">
-    <div><div class="topbar-label">Player</div><div class="topbar-player" id="match-player-label">Dominion</div></div>
+    <div><div class="topbar-label">Player</div><div class="topbar-player" id="match-player-label">You</div></div>
     <div style="text-align:center"><div class="topbar-label">Pairs</div><div class="topbar-score" id="match-pairs-found">0</div></div>
     <div style="text-align:right"><div class="topbar-label">Moves</div><div class="topbar-score" id="match-moves">0</div></div>
   </div>
@@ -449,8 +446,8 @@ function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.class
 
 function selectPlayer(player){
   currentPlayer=player;
-  const names={dominion:'Dominion 🏆',anu:'Anu ⭐',family:'Family 👨‍👩‍👧‍👦'};
-  document.getElementById('hub-welcome').textContent='Choose a game, '+( player==='family'?'everyone':player==='dominion'?'Dominion':'Anu')+'!';
+  const names={dominion:kkGetProfile().name+' 🏆',anu:kkGetProfile().name+' ⭐',family:'Family 👨‍👩‍👧‍👦'};
+  document.getElementById('hub-welcome').textContent='Choose a game, '+( player==='family'?'everyone':kkGetProfile().name)+'!';
   renderHub();
   showScreen('screen-hub');
 }
@@ -518,7 +515,7 @@ function startQuiz(isAnu){
   quizIdx=0; quizScore=0;
   const full=isAnu?QUIZ_DATA.easy:QUIZ_DATA.hard;
   quizSet=shuffle(full).slice(0,10);
-  document.getElementById('quiz-player-label').textContent=(function(){var p=kkGetProfile();return currentPlayer==='family'?'Family':p.name;})();
+  document.getElementById('quiz-player-label').textContent=currentPlayer==='family'?'Family':kkGetProfile().name;
   document.getElementById('quiz-score').textContent='0';
   renderQuizQ(quizSet);
   showScreen('screen-quiz');
@@ -535,10 +532,11 @@ function renderQuizQ(set){
   document.getElementById('quiz-next-btn').style.display='none';
   const opts=document.getElementById('quiz-opts');
   opts.innerHTML='';
+  const labels=['A','B','C','D'];
   q.opts.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='quiz-opt';
-    btn.textContent=opt;
+    btn.textContent=labels[i]+'.  '+opt;
     btn.onclick=()=>answerQuiz(i,q,set);
     opts.appendChild(btn);
   });
@@ -586,7 +584,7 @@ let verseSet=[];
 function startVerse(isAnu){
   verseIdx=0; verseScore=0;
   verseSet=VERSES.slice().sort(()=>Math.random()-0.5).slice(0,8);
-  document.getElementById('verse-player-label').textContent=(function(){var p=kkGetProfile();return currentPlayer==='family'?'Family':p.name;})();
+  document.getElementById('verse-player-label').textContent=currentPlayer==='family'?'Family':kkGetProfile().name;
   document.getElementById('verse-score').textContent='0';
   renderVerse(isAnu);
   showScreen('screen-verse');
@@ -683,7 +681,7 @@ function startWordSearch(){
   wsWords=currentPlayer==='anu'?puzzle.words.slice(0,4):puzzle.words;
   wsFoundCount=0; wsSelectedCells=[]; wsFoundWords=[];
 
-  document.getElementById('ws-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('ws-player-label').textContent=currentPlayer==='family'?'Family':kkGetProfile().name;
   document.getElementById('ws-theme').textContent=puzzle.theme;
   document.getElementById('ws-found').textContent='0/'+wsWords.length;
   document.getElementById('ws-feedback').textContent='';
@@ -812,7 +810,7 @@ function wsEndSelect(){
 // ─────────────────────────────────────────────
 function startStory(){
   storyIdx=0; storyScore=0;
-  document.getElementById('story-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('story-player-label').textContent=currentPlayer==='family'?'Family':kkGetProfile().name;
   document.getElementById('story-score').textContent='0';
   renderStory();
   showScreen('screen-story');
@@ -834,7 +832,9 @@ function renderStory(){
   choices.innerHTML='';
   s.choices.forEach((ch,i)=>{
     const btn=document.createElement('button');
-    btn.className='story-choice'; btn.textContent=ch;
+    btn.className='story-choice';
+    const _sL=['A','B','C','D'];
+    btn.textContent=_sL[i]+'.  '+ch;
     btn.onclick=()=>answerStory(i,s);
     choices.appendChild(btn);
   });
@@ -880,7 +880,7 @@ function startMatch(){
   const count=isAnu?6:12;
   const chars=MATCH_CHARS.slice(0,count);
 
-  document.getElementById('match-player-label').textContent=currentPlayer==='family'?'Family':currentPlayer==='dominion'?'Dominion':'Anu';
+  document.getElementById('match-player-label').textContent=currentPlayer==='family'?'Family':kkGetProfile().name;
   document.getElementById('match-pairs-found').textContent='0';
   document.getElementById('match-moves').textContent='0';
   document.getElementById('match-feedback').textContent='';
@@ -1015,6 +1015,55 @@ function toggleMusic(){ musicPlaying?stopMusic():startMusic(); }
 function autoStart(){ if(!musicPlaying) startMusic(); }
 document.addEventListener('touchstart',autoStart,{once:true});
 document.addEventListener('click',autoStart,{once:true});
-</script>
+
+    // ── KK PROFILE INTEGRATION ──
+    function kkGetProfile() {
+      try {
+        var r = localStorage.getItem('kk_profile');
+        return r ? JSON.parse(r) : {name:'Friend', age:7, isEasy:false};
+      } catch(e) { return {name:'Friend', age:7, isEasy:false}; }
+    }
+
+    function selectMainBiblePlayer() {
+      var prof = kkGetProfile();
+      currentPlayer = (prof.isEasy || prof.age <= 6) ? 'anu' : 'dominion';
+      document.getElementById('hub-welcome').textContent = 'Choose a game, ' + prof.name + '!';
+      renderHub();
+      showScreen('screen-hub');
+    }
+
+    function initBibleProfile() {
+      var prof = kkGetProfile();
+      var hasProfile = prof.name && prof.name !== 'Friend';
+      var isEasy = prof.isEasy || prof.age <= 6;
+      var av = document.getElementById('bible-main-avatar');
+      if(av) av.textContent = isEasy ? '⭐' : '🏆';
+      var nm = document.getElementById('bible-main-name');
+      if(nm) nm.textContent = hasProfile ? prof.name : 'Set up your name!';
+      var sb = document.getElementById('bible-main-sub');
+      if(sb) sb.textContent = hasProfile ? 'Age ' + prof.age + ' · Rising Champion' : 'Open the Hub first';
+      var labels = ['quiz-player-label','verse-player-label',
+                    'ws-player-label','story-player-label','match-player-label'];
+      labels.forEach(function(id) {
+        var el = document.getElementById(id);
+        if(el) el.textContent = prof.name;
+      });
+      // Override selectPlayer to always use profile name
+      var origSelect = window.selectPlayer;
+      if(origSelect && !window._selectPatched) {
+        window._selectPatched = true;
+        window.selectPlayer = function(p) {
+          origSelect(p);
+          var pn = p === 'family' ? 'Family' : kkGetProfile().name;
+          labels.forEach(function(id) {
+            var el = document.getElementById(id); if(el) el.textContent = pn;
+          });
+        };
+      }
+    }
+    document.addEventListener('DOMContentLoaded', initBibleProfile);
+    window.addEventListener('load', initBibleProfile);
+
+  </script>
 </body>
 </html>
