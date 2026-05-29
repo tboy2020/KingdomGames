@@ -819,7 +819,17 @@ function spellWord(fw){
         const box=document.getElementById('lb-'+i);
         if(box){
           box.classList.add('revealed');
-          speak(l.toLowerCase());  // lowercase avoids 'capital X' being said
+          // Speak letter clearly — wrap in pause for better pronunciation
+          var letterWord = l.toLowerCase();
+          // Use phonetic for clarity on tricky letters
+          var phonetic = {
+            'a':'ay','b':'bee','c':'see','d':'dee','e':'ee','f':'ef',
+            'g':'gee','h':'aitch','i':'eye','j':'jay','k':'kay','l':'el',
+            'm':'em','n':'en','o':'oh','p':'pee','q':'cue','r':'ar',
+            's':'ess','t':'tee','u':'you','v':'vee','w':'double-you',
+            'x':'ex','y':'why','z':'zee'
+          };
+          speak(phonetic[letterWord] || letterWord);
           // Last letter
           if(i===letters.length-1){
             setTimeout(()=>{
@@ -851,13 +861,15 @@ function spellWord(fw){
 
 function readQuestionAloud(question, opts) {
   if(!window.speechSynthesis) return;
-  // Read question then each option with a label
-  var fullText = question + '. ';
-  var labels = ['Option A. ', 'Option B. ', 'Option C. ', 'Option D. '];
-  opts.forEach(function(opt, i) {
-    fullText += labels[i] + opt + '. ';
-  });
-  speak(fullText, currentPlayer==='anu' ? 0.88 : 0.95);
+  // Small delay so any current speech finishes before question reads
+  setTimeout(function() {
+    var fullText = question + '. ';
+    var labels = ['Option A. ', 'Option B. ', 'Option C. ', 'Option D. '];
+    opts.forEach(function(opt, i) {
+      fullText += labels[i] + opt + '. ';
+    });
+    speak(fullText, currentPlayer==='anu' ? 0.88 : 0.95);
+  }, 600);
 }
 
 function showWordQuestion(fw){
@@ -916,7 +928,10 @@ function nextWord(){
 }
 
 function replaySpelling(){ loadWord(currentWordIdx); }
-function replayWord(){ speak(FAITH_WORDS[currentWordIdx].word.toLowerCase()+'. '+FAITH_WORDS[currentWordIdx].meaning); }
+function replayWord(){
+  var fw = FAITH_WORDS[currentWordIdx];
+  speakNow(fw.word.toLowerCase() + '. ' + fw.meaning + '. ' + fw.verse);
+}
 
 // ═══════════════════════════════════════
 //  MODE 2 — LIVING VERSE
@@ -947,32 +962,43 @@ function loadVerse(){
 }
 
 function playVerseAudio(){
-  const v=VERSES[currentVerseIdx];
-  const words=v.text.split(' ');
-  speak(v.text);
+  var v = VERSES[currentVerseIdx];
+  var words = v.text.split(' ');
+  clearSpeech();
 
-  // Highlight words as spoken (approximate timing)
-  if(verseHighlightTimer) clearTimeout(verseHighlightTimer);
-  let delay=400;
-  words.forEach((word,i)=>{
-    setTimeout(()=>{
-      document.querySelectorAll('.verse-word').forEach(s=>s.classList.remove('speaking'));
-      const el=document.getElementById('vw-'+i);
+  // Speak full verse then meaning — queued, no interruption
+  speak(v.text);
+  speak(v.meaning);
+
+  // Visual word highlighting (timed to approximate speech)
+  var msPerWord = currentPlayer==='anu' ? 520 : 380;
+  var delay = 300;
+  words.forEach(function(word, i) {
+    setTimeout(function() {
+      document.querySelectorAll('.verse-word').forEach(function(s){ s.classList.remove('speaking'); });
+      var el = document.getElementById('vw-'+i);
       if(el) el.classList.add('speaking');
-      if(i===words.length-1){
-        setTimeout(()=>{
-          document.querySelectorAll('.verse-word').forEach(s=>s.classList.remove('speaking'));
-          document.getElementById('verse-meaning-text').textContent=v.meaning;
-          if(currentPlayer==='anu') speak(v.meaning);
-          setTimeout(()=>showVerseQuestion(v),currentPlayer==='anu'?3000:2000);
-        },600);
+      if(i === words.length - 1) {
+        setTimeout(function() {
+          document.querySelectorAll('.verse-word').forEach(function(s){ s.classList.remove('speaking'); });
+          document.getElementById('verse-meaning-text').textContent = v.meaning;
+        }, 500);
       }
-    },delay);
-    delay+=currentPlayer==='anu'?550:400;
+    }, delay);
+    delay += msPerWord;
   });
+
+  // Show question after verse + 3s pause + meaning + 3s pause
+  var verseTime = words.length * msPerWord + SPEECH_PAUSE_MS;
+  var meaningWords = v.meaning.split(' ').length;
+  var meaningTime = Math.round(meaningWords * (currentPlayer==='anu'?550:400)) + SPEECH_PAUSE_MS;
+  setTimeout(function(){ showVerseQuestion(v); }, verseTime + meaningTime);
 }
 
-function replayVerse(){ loadVerse(); }
+function replayVerse(){
+  var v = VERSES[currentVerseIdx];
+  speakNow(v.text + '. ' + v.meaning);
+}
 
 function showVerseQuestion(v){
   document.getElementById('verse-q-text').textContent=v.q;
@@ -1104,7 +1130,10 @@ function playStoryAudio(){
   setTimeout(()=>showStoryQuestion(scene), readTime+800);
 }
 
-function replayStory(){ playStoryAudio(); }
+function replayStory(){
+  var scene = STORIES[currentStoryId].scenes[currentSceneIdx];
+  speakNow(scene.text);
+}
 
 function showStoryQuestion(scene){
   document.getElementById('story-q-text').textContent=scene.q;
@@ -1192,26 +1221,102 @@ function nextStoryScene(){
 // ═══════════════════════════════════════
 //  SPEECH — Web Speech API
 // ═══════════════════════════════════════
-let femaleVoice=null;
+var femaleVoice = null;
+var maleVoice = null;
+var selectedVoice = null;
+
 function initVoices(){
   if(!window.speechSynthesis) return;
-  const set=()=>{
-    const voices=window.speechSynthesis.getVoices();
-    femaleVoice=voices.find(v=>v.name.match(/samantha|victoria|karen|moira|tessa|fiona|female|google uk english female|google us english/i))||voices[0]||null;
-  };
-  set();
-  if(window.speechSynthesis.onvoiceschanged!==undefined) window.speechSynthesis.onvoiceschanged=set;
+  function setVoices() {
+    var voices = window.speechSynthesis.getVoices();
+    if(!voices || voices.length === 0) return;
+    // Female voices
+    femaleVoice = voices.find(function(v){
+      return v.name.match(/samantha|victoria|karen|moira|tessa|fiona|zira|susan|google uk english female/i);
+    }) || voices.find(function(v){
+      return v.lang && v.lang.startsWith('en') && v.name.toLowerCase().indexOf('female') >= 0;
+    }) || null;
+    // Male voices  
+    maleVoice = voices.find(function(v){
+      return v.name.match(/daniel|alex|fred|tom|oliver|george|rishi|aaron|arthur|google uk english male/i);
+    }) || voices.find(function(v){
+      return v.lang && v.lang.startsWith('en') && v.name.toLowerCase().indexOf('male') >= 0;
+    }) || null;
+    // Default: pick best English voice available
+    if(!femaleVoice && !maleVoice) {
+      var engVoices = voices.filter(function(v){ return v.lang && v.lang.startsWith('en'); });
+      femaleVoice = engVoices[0] || voices[0] || null;
+    }
+    // Selected voice defaults to female, falls back to male, then first available
+    selectedVoice = femaleVoice || maleVoice || (voices.length > 0 ? voices[0] : null);
+  }
+  setVoices();
+  if(window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = setVoices;
+  }
+  // iOS Safari needs a kick
+  setTimeout(setVoices, 500);
+  setTimeout(setVoices, 1500);
 }
 
+// Speech queue — prevents cancel() interrupting ongoing speech
+var speechQueue = [];
+var isSpeaking = false;
+
 function speak(text, rate) {
-  if(!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var u = new SpeechSynthesisUtterance(text);
-  u.rate = rate || (currentPlayer==='anu' ? 0.82 : 0.88);
-  u.pitch = currentPlayer==='anu' ? 1.15 : 1.0;
-  u.volume = 1;
-  if(femaleVoice) u.voice = femaleVoice;
-  window.speechSynthesis.speak(u);
+  if(!window.speechSynthesis || !text) return;
+  // Add to queue
+  speechQueue.push({text: text, rate: rate});
+  if(!isSpeaking) processSpeechQueue();
+}
+
+function speakNow(text, rate) {
+  // Interrupt current speech and speak immediately (for replays)
+  speechQueue = [{text: text, rate: rate}];
+  isSpeaking = false;
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  processSpeechQueue();
+}
+
+var SPEECH_PAUSE_MS = 3000; // 3 second pause between each reading
+
+function processSpeechQueue() {
+  if(speechQueue.length === 0) { isSpeaking = false; return; }
+  isSpeaking = true;
+  var item = speechQueue.shift();
+  try {
+    var u = new SpeechSynthesisUtterance(item.text);
+    u.rate = item.rate || (currentPlayer==='anu' ? 0.82 : 0.88);
+    u.pitch = currentPlayer==='anu' ? 1.1 : 1.0;
+    u.volume = 1;
+    var voice = selectedVoice || femaleVoice || maleVoice || null;
+    if(voice) u.voice = voice;
+    u.onend = function() {
+      isSpeaking = false;
+      // 3 second pause before next item in queue
+      if(speechQueue.length > 0) {
+        setTimeout(processSpeechQueue, SPEECH_PAUSE_MS);
+      }
+    };
+    u.onerror = function() {
+      isSpeaking = false;
+      if(speechQueue.length > 0) {
+        setTimeout(processSpeechQueue, SPEECH_PAUSE_MS);
+      }
+    };
+    window.speechSynthesis.speak(u);
+  } catch(e) {
+    isSpeaking = false;
+    if(speechQueue.length > 0) {
+      setTimeout(processSpeechQueue, SPEECH_PAUSE_MS);
+    }
+  }
+}
+
+function clearSpeech() {
+  speechQueue = [];
+  isSpeaking = false;
+  try { window.speechSynthesis.cancel(); } catch(e){}
 }
 
 // ═══════════════════════════════════════
