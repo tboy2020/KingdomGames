@@ -876,10 +876,11 @@ function showWordQuestion(fw){
   document.getElementById('word-q-text').textContent=fw.q;
   const opts=document.getElementById('word-q-opts');
   opts.innerHTML='';
+  const wLabels=['A','B','C','D'];
   fw.opts.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='q-opt';
-    btn.textContent=opt;
+    btn.textContent=wLabels[i]+'.  '+opt;
     btn.onclick=()=>answerWordQ(i,fw);
     opts.appendChild(btn);
   });
@@ -1008,10 +1009,11 @@ function showVerseQuestion(v){
   const numOpts=currentPlayer==='anu'?2:4;
   const displayOpts=v.opts.slice(0,numOpts);
   const correctAns=v.ans<numOpts?v.ans:0;
+  const vLabels=['A','B','C','D'];
   displayOpts.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='q-opt';
-    btn.textContent=opt;
+    btn.textContent=vLabels[i]+'.  '+opt;
     btn.onclick=()=>answerVerseQ(i,correctAns,v);
     opts.appendChild(btn);
   });
@@ -1140,10 +1142,11 @@ function showStoryQuestion(scene){
   const opts=document.getElementById('story-q-opts');
   opts.innerHTML='';
   const numOpts=currentPlayer==='anu'?2:4;
+  const sLabels=['A','B','C','D'];
   scene.opts.slice(0,numOpts).forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='q-opt';
-    btn.textContent=opt;
+    btn.textContent=sLabels[i]+'.  '+opt;
     btn.onclick=()=>answerStoryQ(i,scene.ans<numOpts?scene.ans:0,scene);
     opts.appendChild(btn);
   });
